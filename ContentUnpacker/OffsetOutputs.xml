@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Content>
+	<KingTilesetPalette Offset="1B8600" Output="Sprites/KingTilesetPalette"/>
+	<KingTileset Offset="1AEE00" Output="Sprites/KingTileset"/>
+	
+	<Mp01 Offset="2E5E00" Output="Maps/mp01" Processor="Tilemap"/>
+	<Mp02 Offset="2E7200" Output="Maps/mp02" Processor="Tilemap"/>
+	<Mp03 Offset="2E8600" Output="Maps/mp03" Processor="Tilemap"/>
+	<Mp04 Offset="2E9A00" Output="Maps/mp04" Processor="Tilemap"/>
+	
+	<Mp01Details Offset="148400" Output="TilePalettes/mp01"/>
+	<Mp02Details Offset="148A00" Output="TilePalettes/mp02"/>
+	<Mp03Details Offset="149000" Output="TilePalettes/mp03"/>
+	<Mp04Details Offset="149600" Output="TilePalettes/mp04"/>
+	<KingTiles Offset="162C00" Output="TilePalettes/KingTileset"/>
+	<MarsTiles Offset="171E00" Output="TilePalettes/MarsTileset"/>
+	<PirateTiles Offset="181000" Output="TilePalettes/PirateTileset"/>
+</Content>
