@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using CommandLine;
 using ContentUnpacker;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -15,5 +16,18 @@ if (args.Length < 2)
 string inputFilePath = args[0];
 string outputFolderPath = args[1];
 
+CommandLineOptions? options = null;
+Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed((parsedOptions) =>
+{
+    // TODO: Check if paths are valid.
+
+    // Set the options.
+    options = parsedOptions;
+}).WithNotParsed((parsedOptions) =>
+{
+    return;
+});
+
 // Start the unpacker.
-await RomUnpacker.UnpackFileAsync(inputFilePath, outputFolderPath, NullLogger.Instance);
+RomUnpacker romUnpacker = new(options, NullLogger.Instance);
+await romUnpacker.UnpackFileAsync();

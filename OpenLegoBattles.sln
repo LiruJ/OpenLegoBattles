@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenLegoBattles", "OpenLegoBattles\OpenLegoBattles.csproj", "{0121CA07-48E6-4B39-81E0-02DFF7D1BBA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenLegoBattles", "OpenLegoBattles\OpenLegoBattles.csproj", "{0121CA07-48E6-4B39-81E0-02DFF7D1BBA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentUnpacker", "ContentUnpacker\ContentUnpacker.csproj", "{974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentUnpacker", "ContentUnpacker\ContentUnpacker.csproj", "{974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "Shared\Shared.shproj", "{23261ED7-F7F1-4E55-B311-EE3148B11818}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,5 +29,10 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CC0288FA-4A72-476E-A777-54DB5E9E9746}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Shared\Shared.projitems*{0121ca07-48e6-4b39-81e0-02dff7d1bba8}*SharedItemsImports = 5
+		Shared\Shared.projitems*{23261ed7-f7f1-4e55-b311-ee3148b11818}*SharedItemsImports = 13
+		Shared\Shared.projitems*{974efee5-cba8-4675-9e0f-6e0c1cbfae34}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

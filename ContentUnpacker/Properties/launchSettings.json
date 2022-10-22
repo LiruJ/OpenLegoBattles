@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ContentUnpacker": {
+      "commandName": "Project",
+      "commandLineArgs": "-i \"../../../LEGO Battles.nds\" -o \"Content/BaseGame\""
+    }
+  }
+}
