@@ -1,4 +1,5 @@
 ﻿using ContentUnpacker.Utils;
+using System.Drawing;
 
 namespace ContentUnpacker.Loaders
 {
@@ -31,7 +32,8 @@ namespace ContentUnpacker.Loaders
         #endregion
 
         #region Get Functions
-        public (byte r, byte g, byte b) GetColourAtIndex(int index) => (paletteData[index * 3], paletteData[(index * 3) + 1], paletteData[(index * 3) + 2]);
+        public Color GetColourAtIndex(int index) 
+            => index == 0 ? Color.Transparent : Color.FromArgb(paletteData[index * 3], paletteData[(index * 3) + 1], paletteData[(index * 3) + 2]);
         #endregion
 
         #region Load Functions

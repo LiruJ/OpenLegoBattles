@@ -116,30 +116,35 @@ namespace ContentUnpacker.Processors
             string tilePalettePath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, LegoDecompressor.OutputFolderPath, tilePaletteName), ContentFileUtil.BinaryExtension);
             BinaryReader tilesetPaletteReader = romUnpacker.GetReaderForFilePath(tilePalettePath, out bool manualCloseTileset);
             string mapPalettePath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, LegoDecompressor.OutputFolderPath, mapName + tilePaletteSuffix), ContentFileUtil.BinaryExtension);
-            BinaryReader mapPaletteReader = romUnpacker.GetReaderForFilePath(mapPalettePath, out bool manualCloseMap);
+            bool manualCloseMap = false;
+            BinaryReader? mapPaletteReader = File.Exists(mapPalettePath) ? romUnpacker.GetReaderForFilePath(mapPalettePath, out manualCloseMap) : null;
 
             // Read the lengths.
             ushort tilesetPaletteCount = tilesetPaletteReader.ReadUInt16();
-            ushort mapPaletteCount = mapPaletteReader.ReadUInt16();
+            ushort? mapPaletteCount = mapPaletteReader?.ReadUInt16();
 
             // Write the length of the tile palette.
-            writer.Write((ushort)(mapPaletteCount + tilesetPaletteHardCount));
+            writer.Write((ushort)((mapPaletteCount ?? 0) + tilesetPaletteHardCount));
 
             // Ignore the length of the tileset tile palette, only load 440 from it.
             for (int i = 0; i < tilesetPaletteHardCount; i++)
                 for (int t = 0; t < 6; t++)
-                    writer.Write((ushort)(tilesetPaletteReader.ReadByte() + tilesetPaletteReader.ReadByte() * 256));
+                    writer.Write(tilesetPaletteReader.ReadUInt16());
 
             // Load the full map palette.
-            for (int i = 0; i < mapPaletteCount; i++)
-                for (int t = 0; t < 6; t++)
-                    writer.Write((ushort)(mapPaletteReader.ReadByte() + mapPaletteReader.ReadByte() * 256));
+            if (mapPaletteReader != null)
+                for (int i = 0; i < mapPaletteCount; i++)
+                    for (int t = 0; t < 6; t++)
+                        writer.Write(mapPaletteReader.ReadUInt16());
 
             // Close or return the readers.
             if (manualCloseTileset) tilesetPaletteReader.Close();
             else romUnpacker.ReturnReader(tilesetPaletteReader);
-            if (manualCloseMap) mapPaletteReader.Close();
-            else romUnpacker.ReturnReader(mapPaletteReader);
+            if (mapPaletteReader!= null)
+            {
+                if (manualCloseMap) mapPaletteReader.Close();
+                else romUnpacker.ReturnReader(mapPaletteReader);
+            }
         }
 
         private void transferMapDataLayer(BinaryWriter mapWriter, byte width, byte height)
@@ -151,7 +156,7 @@ namespace ContentUnpacker.Processors
         private void transferMapDetailLayer(BinaryWriter mapWriter, byte width, byte height)
         {
             for (int i = 0; i < width * height; i++)
-                mapWriter.Write((ushort)(reader.ReadByte() + reader.ReadByte() * 256));
+                mapWriter.Write(reader.ReadUInt16());
         }
 
         private void transferTreeStrips(BinaryWriter mapWriter, ushort treeStripCount)

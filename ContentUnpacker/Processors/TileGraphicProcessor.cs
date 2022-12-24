@@ -108,13 +108,10 @@ namespace ContentUnpacker.Processors
                     {
                         // Get the colour index and associated colour.
                         byte colourIndex = reader.ReadByte();
-                        (byte r, byte g, byte b) = palette.GetColourAtIndex(colourIndex);
-
-                        // If the index is 0, then use a transparent colour.
-                        byte a = colourIndex == 0 ? byte.MinValue : byte.MaxValue;
+                        Color colour = palette.GetColourAtIndex(colourIndex);
 
                         // Write the colour.
-                        texture.SetPixel((tileX * 8) + x, (tileY * 8) + y, Color.FromArgb(a, r, g, b));
+                        texture.SetPixel((tileX * 8) + x, (tileY * 8) + y, colour);
                     }
 
                 // Handle incrementing the tile count.

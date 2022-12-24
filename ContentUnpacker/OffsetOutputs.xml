@@ -10,16 +10,23 @@
 	<PirateTilesetPalette Offset="24D9C00"/>
 	<PirateTilesetSprite Offset="24D0200" Output="Sprites/PirateTileset" Palette="PirateTilesetPalette" CreateTilesetFile="true"/>
 
+	<FogTilesetSprite Offset="1A0E00" Output="Sprites/FogTileset" Palette="PirateTilesetPalette" CreateTilesetFile="true"/>
+
 	<!--Sprites-->
 	<!--<KingFactionPalette Offset="60EAA00"/>
 	<King1Sprite Offset="60E5200" Output="Sprites/King1" Palette="KingFactionPalette"/>-->
 	
 	<!--Faction tile palettes-->
+	<!--<Animations Offset="0126A00"/>-->
+	<!--<Entities Offset="15DA00"/>-->
+	<!--<FactionsPalette Offset="162000"/>-->
 	<KingTilePalette Offset="162C00"/>
 	<MarsTilePalette Offset="171E00"/>
 	<PirateTilePalette Offset="181000"/>
 
 	<!--Maps-->
+	<Test1 Offset="351E00" Output="Maps/test1"/>
+	
 	<Mp01 Offset="2E5E00" Output="Maps/mp01"/>
 	<Mp01TilePalette Offset="148400"/>
 	

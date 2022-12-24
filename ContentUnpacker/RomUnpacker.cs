@@ -1,5 +1,6 @@
 ﻿using ContentUnpacker.Data;
 using ContentUnpacker.Decompressors;
+using ContentUnpacker.NDSFS;
 using ContentUnpacker.Processors;
 using ContentUnpacker.Utils;
 using Microsoft.Extensions.Logging;
@@ -45,6 +46,7 @@ namespace ContentUnpacker
 
         private readonly ConcurrentQueue<BinaryReader> pooledBinaryReaders = new();
 
+        private NDSFileSystem fileSystem;
         #endregion
 
         #region Properties
@@ -143,6 +145,9 @@ namespace ContentUnpacker
                 if (currentCharacter != fileMagicString[i])
                     throw new Exception($"Invalid character in magic string at 0x{reader.BaseStream.Position:X8} expected: {fileMagicString[i]}, got: {currentCharacter}");
             }
+
+            // Create the file system from the rom.
+            fileSystem = NDSFileSystem.LoadFromRom(reader);
 
             // Pool the reader.
             pooledBinaryReaders.Enqueue(reader);

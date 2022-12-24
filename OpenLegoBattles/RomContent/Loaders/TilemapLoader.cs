@@ -57,7 +57,7 @@ namespace OpenLegoBattles.RomContent.Loaders
             List<TilePreset> tilePalette = new List<TilePreset>(tilePaletteCount);
             for (int i = 0; i < tilePaletteCount; i++)
             {
-                TilePreset tilePreset = new TilePreset(reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16());
+                TilePreset tilePreset = new TilePreset((ushort)i, reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16());
                 tilePalette.Add(tilePreset);
             }
 
