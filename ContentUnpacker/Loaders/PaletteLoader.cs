@@ -1,4 +1,4 @@
-﻿using ContentUnpacker.Utils;
+﻿using ContentUnpacker.NDSFS;
 using System.Drawing;
 
 namespace ContentUnpacker.Loaders
@@ -23,12 +23,6 @@ namespace ContentUnpacker.Loaders
 
         #region Properties
         public uint PaletteSize { get; private set; }
-        #endregion
-
-        #region Constructors
-        public PaletteLoader(RomUnpacker romUnpacker) : base(romUnpacker)
-        {
-        }
         #endregion
 
         #region Get Functions
@@ -71,10 +65,10 @@ namespace ContentUnpacker.Loaders
 
             // Write all colours.
             for (int colourIndex = 0; colourIndex < PaletteSize; colourIndex++)
-                ReadColour(reader, colourIndex);
+                readColour(reader, colourIndex);
         }
 
-        private void ReadColour(BinaryReader reader, int colourIndex)
+        private void readColour(BinaryReader reader, int colourIndex)
         {
             // Read the two byte BGR555 colour.
             ushort packedColour = reader.ReadUInt16();

@@ -6,9 +6,11 @@
     <SharedGUID>23261ed7-f7f1-4e55-b311-ee3148b11818</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Shared</Import_RootNamespace>
+    <Import_RootNamespace>GlobalShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Content\ContentFileUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TileData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TileType.cs" />
   </ItemGroup>
 </Project>

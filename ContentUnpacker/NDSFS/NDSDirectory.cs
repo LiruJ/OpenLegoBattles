@@ -1,5 +1,4 @@
-﻿using ContentUnpacker.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -144,7 +143,7 @@ namespace ContentUnpacker.NDSFS
                         reader.BaseStream.Position = savedPosition;
 
                         // Create the file with its name, id, and offsets.
-                        NDSFile file = new(name, currentFileId, fileDataOffset, fileDataEndOffset - fileDataOffset);
+                        NDSFile file = new(name, currentFileId, this, fileDataOffset, fileDataEndOffset - fileDataOffset);
                         files.Add(file);
                         currentFileId++;
                     }

@@ -2,10 +2,12 @@
 using ContentUnpacker.Decompressors;
 using ContentUnpacker.NDSFS;
 using ContentUnpacker.Processors;
+using ContentUnpacker.Tilemaps;
 using ContentUnpacker.Utils;
 using Microsoft.Extensions.Logging;
-using Shared.Content;
+using GlobalShared.Content;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Xml;
 
 namespace ContentUnpacker
@@ -173,15 +175,20 @@ namespace ContentUnpacker
             ConcurrentQueue<BinaryReader> pooledBinaryReaders = new();
 
             // Create the unpacked files directory.
-            if (Directory.Exists(WorkingFolderName))
-                Directory.Delete(WorkingFolderName, true);
-            Directory.CreateDirectory(WorkingFolderName);
+            //if (Directory.Exists(WorkingFolderName))
+            //    Directory.Delete(WorkingFolderName, true);
+            //Directory.CreateDirectory(WorkingFolderName);
 
-            // Decompress chunks and save the offsets of any uncompressed chunks.
-            await decompressChunksAsync(mainNode);
+            // Create the stages.
+            DecompressionStage decompressionStage = new(this, fileSystem);
+            TilemapOptimiserStage tilemapOptimiserStage = new(Options);
+
+            // Begin each stage in sequence.
+            //await decompressionStage.BeginAsync(mainNode);
+            await tilemapOptimiserStage.BeginAsync();
 
             // Process chunks.
-            processChunks(mainNode);
+            //processChunks(mainNode);
 
 #if RELEASE
             // Delete the unpacked folder.
@@ -191,60 +198,7 @@ namespace ContentUnpacker
             // Close all binary readers.
             foreach (BinaryReader reader in pooledBinaryReaders)
                 reader.Close();
-        }
-        #endregion
-
-        #region Decompression Functions
-        private async Task decompressChunksAsync(XmlNode mainNode)
-        {
-            // Create the required directories.
-            Directory.CreateDirectory(Path.Combine(WorkingFolderName, LegoDecompressor.OutputFolderPath, LegoDecompressor.TemporaryFolderPath));
-
-            // Save the decompression tasks.
-            List<Task> decompressionTasks = new();
-
-            // Decompress any compressed chunks.
-            foreach (XmlNode contentNode in mainNode)
-            {
-                // Ignore comments.
-                if (contentNode.NodeType != XmlNodeType.Element) continue;
-
-                // Parse the offset position.
-                if (!contentNode.TryParseOffsetAttribute(out int offsetPosition))
-                {
-                    Console.WriteLine($"Content node named \"{contentNode.Name}\" has invalid offset, should be a hex number WITHOUT the \"0x\" prefix, skipping.");
-                    continue;
-                }
-
-                // Decompress the chunk.
-                decompressionTasks.Add(decompressChunkAsync(offsetPosition, contentNode.Name));
-            }
-
-            // Wait for all decompression tasks to finish.
-            await Task.WhenAll(decompressionTasks);
-        }
-
-        private async Task decompressChunkAsync(int offsetPosition, string filename)
-        {
-            // Get or create a pooled binary reader.
-            if (!pooledBinaryReaders.TryDequeue(out BinaryReader? reader))
-                reader = new BinaryReader(File.OpenRead(Options.InputFile));
-
-            // Move the binary reader to the offset.
-            reader.BaseStream.Position = offsetPosition;
-
-            // Peek the magic word.
-            uint magicWord = reader.ReadUInt32();
-            reader.BaseStream.Position -= 4;
-
-            // If the magic word says that the chunk is compressed, decompress it. Otherwise; save the offset to the dictionary of offsets.
-            if (magicWord == LegoDecompressor.MagicWord)
-                await LegoDecompressor.DecompressChunkAsync(reader, filename);
-            else
-                outputOffsets.TryAdd(Path.GetFileNameWithoutExtension(filename), offsetPosition);
-
-            // Return the reader to the pool.
-            pooledBinaryReaders.Enqueue(reader);
+            pooledBinaryReaders.Clear();
         }
         #endregion
 
@@ -258,7 +212,7 @@ namespace ContentUnpacker
                 if (contentNode.NodeType != XmlNodeType.Element) continue;
 
                 // Get a reader for this file.
-                string filePath = Path.ChangeExtension(Path.Combine(WorkingFolderName, LegoDecompressor.OutputFolderPath, contentNode.Name), ContentFileUtil.BinaryExtension);
+                string filePath = Path.ChangeExtension(Path.Combine(WorkingFolderName, DecompressionStage.OutputFolderPath, contentNode.Name), ContentFileUtil.BinaryExtension);
                 BinaryReader reader = GetReaderForFilePath(filePath, out bool manualClose);
 
                 // Process the chunk.

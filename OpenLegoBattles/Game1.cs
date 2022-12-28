@@ -82,25 +82,7 @@ namespace OpenLegoBattles
             }
 
             // Load the map.
-            tilemap = romContentManager.Load<Tilemap>("mp01");
-
-            for (int i = 0; i < tilemap.TilePalette.Count; i++)
-            {
-                if (tilemap.TilePalette[i].TopLeft == 812)
-                {
-                    Console.WriteLine();
-                }
-            }
-
-            SortedDictionary<ushort, int> indexCounts = new SortedDictionary<ushort, int>();
-            for (int x = 0; x < tilemap.Width; x++)
-            {
-                for (int y = 0; y < tilemap.Height; y++)
-                {
-                    if (!indexCounts.ContainsKey(tilemap.GetDetailTileAt(x, y).Index)) indexCounts.Add(tilemap.GetDetailTileAt(x, y).Index, 0);
-                    indexCounts[tilemap.GetDetailTileAt(x, y).Index]++;
-                }
-            }
+            tilemap = romContentManager.Load<Tilemap>("pp1_2");
 
             // Load the spritesheet.
             spritesheet = romContentManager.Load<Spritesheet>(tilemap.TilesheetName);
@@ -108,55 +90,6 @@ namespace OpenLegoBattles
             graphics.PreferredBackBufferWidth = spritesheet.PresetTileSize.X * tilemap.Width;
             graphics.PreferredBackBufferHeight = spritesheet.PresetTileSize.Y * tilemap.Height;
             graphics.ApplyChanges();
-
-            //testSaveTiles(5, 100);
-
-            fogTilesheet = romContentManager.Load<Spritesheet>("FogTileset");
-
-            using BinaryReader reader = new BinaryReader(File.OpenRead("FogTilePalette"));
-
-            for (int i = 0; i < reader.BaseStream.Length / 6; i++)
-            {
-                TilePreset tilePreset = new TilePreset((ushort)i, reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
-                fogTiles.Add(tilePreset);
-            }
-        }
-        private Spritesheet fogTilesheet;
-        private List<TilePreset> fogTiles = new List<TilePreset>();
-        private void testSaveTiles(int tileWidth, int tileHeight)
-        {
-            RenderTarget2D renderTarget = new RenderTarget2D(GraphicsDevice, tileWidth * spritesheet.PresetTileSize.X, tileHeight * spritesheet.PresetTileSize.Y);
-
-            GraphicsDevice.SetRenderTarget(renderTarget);
-            GraphicsDevice.Clear(Color.Transparent);
-
-            spriteBatch.Begin();
-
-            testSaveAllTiles(tileWidth, tileHeight);
-
-            spriteBatch.End();
-
-            GraphicsDevice.SetRenderTarget(null);
-            FileStream fileStream = File.Create("KingTiles.png");
-            renderTarget.SaveAsPng(fileStream, renderTarget.Width, renderTarget.Height);
-            fileStream.Close();
-
-            renderTarget.Dispose();
-        }
-        private void testSaveAllTiles(int tileWidth, int tileHeight)
-        {
-            int tileIndex = 0;
-            for (int y = 0; y < tileHeight; y++)
-            {
-                for (int x = 0; x < tileWidth; x++)
-                {
-                    tilemap.TilePalette[tileIndex].Draw(spriteBatch, spritesheet, x * spritesheet.PresetTileSize.X, y * spritesheet.PresetTileSize.Y);
-
-
-                    tileIndex++;
-                    if (tileIndex == 440) return;
-                }
-            }
         }
 
         protected override void Update(GameTime gameTime)
@@ -177,48 +110,21 @@ namespace OpenLegoBattles
 
             spriteBatch.Begin();
 
-            //for (int x = 0; x < tilemap.Width; x++)
-            //{
-            //    for (int y = 0; y < tilemap.Height; y++)
-            //    {
-
-            //        TilePreset tilePreset = tilemap.GetDetailTileAt(x, y);
-
-            //        tilePreset.Draw(spriteBatch, spritesheet, x * spritesheet.PresetTileSize.X, y * spritesheet.PresetTileSize.Y);
-
-            //        //Rectangle source = spritesheet.CalculateSourceRectangle(tilePreset.TopLeft);
-            //        //spriteBatch.Draw(spritesheet.Texture, new Rectangle(x * 24, y * 16, 8, 8), source, Color.White);
-
-            //        //source = spritesheet.CalculateSourceRectangle(tilePreset.TopMiddle);
-            //        //spriteBatch.Draw(spritesheet.Texture, new Rectangle((x * 24) + 8, y * 16, 8, 8), source, Color.White);
-
-            //        //source = spritesheet.CalculateSourceRectangle(tilePreset.TopRight);
-            //        //spriteBatch.Draw(spritesheet.Texture, new Rectangle((x * 24) + 16, y * 16, 8, 8), source, Color.White);
-
-            //        //source = spritesheet.CalculateSourceRectangle(tilePreset.BottomLeft);
-            //        //spriteBatch.Draw(spritesheet.Texture, new Rectangle(x * 24, (y * 16) + 8, 8, 8), source, Color.White);
-
-            //        //source = spritesheet.CalculateSourceRectangle(tilePreset.BottomMiddle);
-            //        //spriteBatch.Draw(spritesheet.Texture, new Rectangle((x * 24) + 8, (y * 16) + 8, 8, 8), source, Color.White);
-
-            //        //source = spritesheet.CalculateSourceRectangle(tilePreset.BottomRight);
-            //        //spriteBatch.Draw(spritesheet.Texture, new Rectangle((x * 24) + 16, (y * 16) + 8, 8, 8), source, Color.White);
-
-            //        if (tilemap.HasTreeAtPosition(x, y))
-            //        {
-            //            Rectangle source = spritesheet.CalculateSourceRectangle(20);
-            //            spriteBatch.Draw(spritesheet.Texture, new Rectangle(x * 24, y * 16, 24, 16), source, Color.White);
-            //        }
-            //    }
-            //}
-
-            int i = 0;
-            for (int y = 0; y < 8 && i < fogTiles.Count; y++)
+            for (int x = 0; x < tilemap.Width; x++)
             {
-                for (int x = 0; x < 24 && i < fogTiles.Count; x++)
+                for (int y = 0; y < tilemap.Height; y++)
                 {
-                    fogTiles[i].Draw(spriteBatch, fogTilesheet, fogTilesheet.PresetTileSize.X * x, fogTilesheet.PresetTileSize.Y * y);
-                    i++;
+
+                    TilePreset tilePreset = tilemap.GetDetailTileAt(x, y);
+
+                    tilePreset.Draw(spriteBatch, spritesheet, x * spritesheet.PresetTileSize.X, y * spritesheet.PresetTileSize.Y);
+
+
+                    //if (tilemap.HasTreeAtPosition(x, y))
+                    //{
+                    //    Rectangle source = spritesheet.CalculateSourceRectangle(20);
+                    //    spriteBatch.Draw(spritesheet.Texture, new Rectangle(x * 24, y * 16, 24, 16), source, Color.White);
+                    //}
                 }
             }
 

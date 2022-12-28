@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Content>
-	<!--Graphical tilesets-->
+	<!--Graphical tilesets--><!--
 	<KingTilesetPalette Offset="1B8600"/>
 	<KingTilesetSprite Offset="1AEE00" Output="Sprites/KingTileset" Palette="KingTilesetPalette" CreateTilesetFile="true"/>
 
@@ -12,39 +12,12 @@
 
 	<FogTilesetSprite Offset="1A0E00" Output="Sprites/FogTileset" Palette="PirateTilesetPalette" CreateTilesetFile="true"/>
 
-	<!--Sprites-->
-	<!--<KingFactionPalette Offset="60EAA00"/>
+	--><!--Sprites--><!--
+	--><!--<KingFactionPalette Offset="60EAA00"/>
 	<King1Sprite Offset="60E5200" Output="Sprites/King1" Palette="KingFactionPalette"/>-->
+	<Root RomDirectory=""/>
 	
-	<!--Faction tile palettes-->
-	<!--<Animations Offset="0126A00"/>-->
-	<!--<Entities Offset="15DA00"/>-->
-	<!--<FactionsPalette Offset="162000"/>-->
-	<KingTilePalette Offset="162C00"/>
-	<MarsTilePalette Offset="171E00"/>
-	<PirateTilePalette Offset="181000"/>
-
 	<!--Maps-->
-	<Test1 Offset="351E00" Output="Maps/test1"/>
-	
-	<Mp01 Offset="2E5E00" Output="Maps/mp01"/>
-	<Mp01TilePalette Offset="148400"/>
-	
-	<Mp02 Offset="2E7200" Output="Maps/mp02"/>
-	<Mp02TilePalette Offset="148A00"/>
-	
-	<Mp03 Offset="2E8600" Output="Maps/mp03"/>
-	<Mp03TilePalette Offset="149000"/>
-	
-	<Mp04 Offset="2E9A00" Output="Maps/mp04"/>
-	<Mp04TilePalette Offset="149600"/>
-
-	<Mp05 Offset="2EB000" Output="Maps/mp05"/>
-	<Mp05TilePalette Offset="149A00"/>
-
-	<Pi1_1 Offset="317000" Output="Maps/pi1_1"/>
-	<Pi1_1TilePalette Offset="152200"/>
-
-	<Pp1_1 Offset="333000" Output="Maps/pp1_1"/>
-	<Pp1_1TilePalette Offset="157000"/>
+	<Maps RomDirectory="Maps/"/>
+	<BlockPalettes RomDirectory="BP/"/>
 </Content>

@@ -44,6 +44,11 @@ namespace ContentUnpacker.NDSFS
         public ushort ID { get; }
 
         /// <summary>
+        /// The directory containing this file.
+        /// </summary>
+        public NDSDirectory ParentDirectory { get; }
+
+        /// <summary>
         /// The offset of this file's data in the rom file.
         /// </summary>
         public int Offset { get; }
@@ -55,10 +60,11 @@ namespace ContentUnpacker.NDSFS
         #endregion
 
         #region Constructors
-        public NDSFile(string name, ushort id, int offset, int size)
+        public NDSFile(string name, ushort id, NDSDirectory parentDirectory, int offset, int size)
         {
             Name = name;
             ID = id;
+            ParentDirectory = parentDirectory;
             Offset = offset;
             Size = size;
         }

@@ -1,6 +1,6 @@
 ﻿using ContentUnpacker.Decompressors;
 using ContentUnpacker.Loaders;
-using Shared.Content;
+using GlobalShared.Content;
 
 namespace ContentUnpacker.Data
 {
@@ -28,7 +28,7 @@ namespace ContentUnpacker.Data
         public T GetOrLoadData<T>(string filename) where T : ContentLoader
         {
             // Convert the file path so that it's full. This ensures the same path always gives the same loader.
-            string filePath = Path.GetFullPath(Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, LegoDecompressor.OutputFolderPath, filename), ContentFileUtil.BinaryExtension));
+            string filePath = Path.GetFullPath(Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, filename), ContentFileUtil.BinaryExtension));
 
             // If there is already a loader for the filepath, return it.
             if (cachedDataByFilePath.TryGetValue(filePath, out var data))

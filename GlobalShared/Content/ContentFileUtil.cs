@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Shared.Content
+namespace GlobalShared.Content
 {
     /// <summary>
     /// The util used for content files.

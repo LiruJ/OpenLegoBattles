@@ -31,7 +31,7 @@ namespace ContentUnpacker.Utils
         public static bool TryGetTextAttribute(this XmlNode node, string attributeName, out string text)
         {
             XmlAttribute? textAttribute = node.Attributes?[attributeName];
-            if (string.IsNullOrWhiteSpace(textAttribute?.Value))
+            if (textAttribute?.Value == null)
             {
                 text = string.Empty;
                 return false;

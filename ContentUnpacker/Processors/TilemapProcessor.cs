@@ -1,5 +1,5 @@
 ﻿using ContentUnpacker.Decompressors;
-using Shared.Content;
+using GlobalShared.Content;
 using System.Text;
 using System.Xml;
 
@@ -113,9 +113,9 @@ namespace ContentUnpacker.Processors
         private void transferTilePalette(BinaryWriter writer, string tilePaletteName, string mapName)
         {
             // Load the palette files.
-            string tilePalettePath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, LegoDecompressor.OutputFolderPath, tilePaletteName), ContentFileUtil.BinaryExtension);
+            string tilePalettePath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, tilePaletteName), ContentFileUtil.BinaryExtension);
             BinaryReader tilesetPaletteReader = romUnpacker.GetReaderForFilePath(tilePalettePath, out bool manualCloseTileset);
-            string mapPalettePath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, LegoDecompressor.OutputFolderPath, mapName + tilePaletteSuffix), ContentFileUtil.BinaryExtension);
+            string mapPalettePath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, mapName + tilePaletteSuffix), ContentFileUtil.BinaryExtension);
             bool manualCloseMap = false;
             BinaryReader? mapPaletteReader = File.Exists(mapPalettePath) ? romUnpacker.GetReaderForFilePath(mapPalettePath, out manualCloseMap) : null;
 

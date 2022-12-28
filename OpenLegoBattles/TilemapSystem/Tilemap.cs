@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using GlobalShared.Tilemaps;
+using System.Collections.Generic;
 
 namespace OpenLegoBattles.TilemapSystem
 {
@@ -7,31 +8,15 @@ namespace OpenLegoBattles.TilemapSystem
     /// </summary>
     internal class Tilemap
     {
+        #region Operators
+        public TileData this[int x, int y] => mapData[x, y];
+        #endregion
+
         #region Fields
         /// <summary>
-        /// The first data layer.
+        /// The layer of graphical tile indices, where each index refers to a tile preset in the <see cref="TilePalette"/>.
         /// </summary>
-        private readonly byte[,] dataLayer1;
-
-        /// <summary>
-        /// The first data layer.
-        /// </summary>
-        private readonly byte[,] dataLayer2;
-
-        /// <summary>
-        /// The first data layer.
-        /// </summary>
-        private readonly byte[,] dataLayer3;
-
-        /// <summary>
-        /// The layer of graphical tile indices, where each index refers to a tile prset in the <see cref="TilePalette"/>.
-        /// </summary>
-        private readonly ushort[,] detailLayer;
-
-        /// <summary>
-        /// The tree layer of the map, where 0 means no tree, and other values handle the different graphical states of a tree tile.
-        /// </summary>
-        private readonly TreeLayer treeLayer;
+        private readonly TileData[,] mapData;
         #endregion
 
         #region Properties
@@ -57,13 +42,9 @@ namespace OpenLegoBattles.TilemapSystem
         #endregion
 
         #region Constructors
-        public Tilemap(string tilesheetName, int width, int height, IReadOnlyList<TilePreset> tilePalette, byte[,] dataLayer1, byte[,] dataLayer2, byte[,] dataLayer3, ushort[,] detailLayer, byte[] treeStrips)
+        public Tilemap(string tilesheetName, int width, int height, IReadOnlyList<TilePreset> tilePalette, TileData[,] mapData)
         {
-            this.dataLayer1 = dataLayer1;
-            this.dataLayer2 = dataLayer2;
-            this.dataLayer3 = dataLayer3;
-            this.detailLayer = detailLayer;
-            treeLayer = new TreeLayer(width, height, treeStrips);
+            this.mapData = mapData;
             Width = width;
             Height = height;
             TilePalette = tilePalette;
@@ -78,10 +59,10 @@ namespace OpenLegoBattles.TilemapSystem
         /// <param name="x"> The x position. </param>
         /// <param name="y"> The y position. </param>
         /// <returns> The preset representing the detail tile at the given position. </returns>
-        public TilePreset GetDetailTileAt(int x, int y) => TilePalette[detailLayer[x, y]];
+        public TilePreset GetDetailTileAt(int x, int y) => TilePalette[mapData[x, y].Index];
 
         /// <inheritdoc cref="TreeLayer.HasTreeAtPosition"/>
-        public bool HasTreeAtPosition(int x, int y) => treeLayer.HasTreeAtPosition(x, y);
+        public bool HasTreeAtPosition(int x, int y) => mapData[x, y].HasTree;
         #endregion
     }
 }

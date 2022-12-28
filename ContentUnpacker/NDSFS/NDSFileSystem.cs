@@ -56,7 +56,7 @@ namespace ContentUnpacker.NDSFS
 
             // Register each of the directory's files by ID. This will throw an exception if the file is being registered twice.
             foreach (NDSFile file in directory.Files)
-                FilesById.Add(file.ID, file);
+                filesById.Add(file.ID, file);
 
             // Recursively register all sub directories.
             foreach (NDSDirectory subDirectory in directory.SubDirectories)
@@ -90,7 +90,7 @@ namespace ContentUnpacker.NDSFS
             }
 
             // Register the directory.
-            DirectoriesByPath.Add(directory.Path ?? throw new Exception("Directory path was somehow null."), directory);
+            directoriesByPath.Add(directory.Path ?? throw new Exception("Directory path was somehow null."), directory);
 
             // Register all files in this directory.
             int directoryPathLength = pathBuilder.Length;
@@ -102,7 +102,7 @@ namespace ContentUnpacker.NDSFS
                 pathBuilder.Length = directoryPathLength;
 
                 // Register the file by its path.
-                FilesByPath.Add(filepath, file);
+                filesByPath.Add(filepath, file);
                 file.Path = filepath;
             }
 

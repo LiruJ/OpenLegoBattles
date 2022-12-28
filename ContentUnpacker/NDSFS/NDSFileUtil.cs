@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace ContentUnpacker.Utils
+namespace ContentUnpacker.NDSFS
 {
     internal static class NDSFileUtil
     {

@@ -1,7 +1,9 @@
 ﻿using OpenLegoBattles.TilemapSystem;
-using Shared.Content;
+using GlobalShared.Content;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using GlobalShared.Tilemaps;
 
 namespace OpenLegoBattles.RomContent.Loaders
 {
@@ -36,19 +38,12 @@ namespace OpenLegoBattles.RomContent.Loaders
             ushort tilePaletteCount = reader.ReadUInt16();
             List<TilePreset> tilePalette = loadTilePalette(reader, tilePaletteCount);
 
-            // Load the data layers.
-            byte[,] dataLayer1 = loadMapDataLayer(reader, width, height);
-            byte[,] dataLayer2 = loadMapDataLayer(reader, width, height);
-            byte[,] dataLayer3 = loadMapDataLayer(reader, width, height);
+            // Load the data layer.
+            TileData[,] mapData = loadMapData(reader, width, height);
 
-            // Load the detail layer.
-            ushort[,] detailLayer = loadMapDetailLayer(reader, width, height);
-
-            // Load the tree strips.
-            byte[] treeStrips = loadTreeStrips(reader);
 
             // Create and return the tilemap.
-            return new Tilemap(tilesheetName, width, height, tilePalette, dataLayer1, dataLayer2, dataLayer3, detailLayer, treeStrips);
+            return new Tilemap(tilesheetName, width, height, tilePalette, mapData);
         }
 
         private static List<TilePreset> loadTilePalette(BinaryReader reader, ushort tilePaletteCount)
@@ -65,48 +60,18 @@ namespace OpenLegoBattles.RomContent.Loaders
             return tilePalette;
         }
 
-        private static byte[,] loadMapDataLayer(BinaryReader reader, byte width, byte height)
+        private static TileData[,] loadMapData(BinaryReader reader, byte width, byte height)
         {
             // Create the array.
-            byte[,] layerData = new byte[width, height];
+            TileData[,] mapData = new TileData[width, height];
 
             // Load the data into the array.
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
-                    layerData[x, y] = reader.ReadByte();
+                    mapData[x, y] = new TileData(reader.ReadUInt16());
 
             // Return the array.
-            return layerData;
-        }
-
-        private static ushort[,] loadMapDetailLayer(BinaryReader reader, byte width, byte height)
-        {
-            // Create the array.
-            ushort[,] layerData = new ushort[width, height];
-
-            // Load the data into the array.
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                    layerData[x, y] = reader.ReadUInt16();
-
-            // Return the array.
-            return layerData;
-        }
-
-        private static byte[] loadTreeStrips(BinaryReader reader)
-        {
-            // Read the strip length.
-            ushort treeStripCount = reader.ReadUInt16();
-
-            // Create an array to hold the tree strips.
-            byte[] treeStrips = new byte[treeStripCount];
-
-            // Read each byte as a strip length.
-            for (int i = 0; i < treeStripCount; i++)
-                treeStrips[i] = reader.ReadByte();
-
-            // Return the tree strips.
-            return treeStrips;
+            return mapData;
         }
         #endregion
     }

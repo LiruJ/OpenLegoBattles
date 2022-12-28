@@ -1,5 +1,5 @@
 ﻿using ContentUnpacker.Utils;
-using Shared.Content;
+using GlobalShared.Content;
 using System.Xml;
 
 namespace ContentUnpacker.Processors

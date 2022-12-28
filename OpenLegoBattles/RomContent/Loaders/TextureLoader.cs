@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
-using Shared.Content;
+using GlobalShared.Content;
 using System;
 using System.Collections.Generic;
 

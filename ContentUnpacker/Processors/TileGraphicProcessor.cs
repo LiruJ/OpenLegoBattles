@@ -1,6 +1,7 @@
 ﻿using ContentUnpacker.Loaders;
+using ContentUnpacker.NDSFS;
 using ContentUnpacker.Utils;
-using Shared.Content;
+using GlobalShared.Content;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Xml;

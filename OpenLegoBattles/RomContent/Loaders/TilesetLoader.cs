@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using OpenLegoBattles.Graphics;
-using Shared.Content;
+using GlobalShared.Content;
 using System.IO;
 
 namespace OpenLegoBattles.RomContent.Loaders

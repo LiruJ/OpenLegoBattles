@@ -17,11 +17,23 @@
     <None Update="lzx.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Masks\FogTilePalette.tbp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Masks\KingTilesetTreeMask.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Masks\MarsTilesetTreeMask.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Masks\PirateTilesetTreeMask.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="OffsetOutputs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
-  <Import Project="..\Shared\Shared.projitems" Label="Shared" />
+  <Import Project="..\GlobalShared\GlobalShared.projitems" Label="Shared" />
 
 </Project>

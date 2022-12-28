@@ -1,4 +1,5 @@
-﻿using Shared.Content;
+﻿using ContentUnpacker.NDSFS;
+using GlobalShared.Content;
 using System.Diagnostics;
 
 namespace ContentUnpacker.Decompressors
@@ -34,33 +35,48 @@ namespace ContentUnpacker.Decompressors
         /// </summary>
         public const string TemporaryFolderPath = "Temporary";
 
-        /// <summary>
-        /// The path of the folder where the decompressed files are stored, relative to the working folder.
-        /// </summary>
-        public const string OutputFolderPath = "Decompressed";
+
         #endregion
 
         #region Load Functions
-        public static async Task DecompressChunkAsync(BinaryReader reader, string filename)
+        public static async Task DecompressFileAsync(BinaryReader reader, NDSFile file)
         {
-            // Read the chunk header.
-            readChunkHeader(reader, out uint uncompressedSize, out List<uint> segmentSizes, out byte compressionType);
+            // Ensure the file is valid.
+            if (file.Path == null)
+                throw new ArgumentException("File's path was somehow null.");
 
-            // Make the file writer.
-            string outputPath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, OutputFolderPath, filename), ContentFileUtil.BinaryExtension);
+            // Create the output path so that it mirrors the NDS structure.
+            string outputPath = Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, file.Path);
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
             using BinaryWriter writer = new(File.Create(outputPath));
 
-            switch (compressionType)
+            // Peek the magic word.
+            uint magicWord = reader.ReadUInt32();
+            reader.BaseStream.Position -= 4;
+
+            // If the file is compressed, decompress it.
+            if (magicWord == MagicWord)
             {
-                case lzxMagicByte:
-                    await loadLZXAsync(reader, writer, segmentSizes, filename);
-                    break;
-                case uncompressedMagicByte:
-                    await loadUncompressed(reader, writer, uncompressedSize);
-                    break;
-                default:
-                    break;
+                // Read the chunk header.
+                readChunkHeader(reader, out uint uncompressedSize, out List<uint> segmentSizes, out byte compressionType);
+
+                // Handle the compression type. Note that for whatever reason, it can be a compressed header with an uncompressed body.
+                switch (compressionType)
+                {
+                    case lzxMagicByte:
+                        await loadLZXAsync(reader, writer, segmentSizes, file);
+                        break;
+                    case uncompressedMagicByte:
+                        await loadUncompressedAsync(reader, writer, uncompressedSize);
+                        break;
+                    default:
+                        Console.WriteLine($"Unhandled compression type: {compressionType}.");
+                        break;
+                }
             }
+            // Otherwise; just copy it directly.
+            else
+                await loadUncompressedAsync(reader, writer, (uint)file.Size);
         }
 
         private static void readChunkHeader(BinaryReader reader, out uint uncompressedSize, out List<uint> segmentSizes, out byte compressionType)
@@ -83,7 +99,7 @@ namespace ContentUnpacker.Decompressors
             reader.BaseStream.Position--;
         }
 
-        private static async Task loadLZXAsync(BinaryReader reader, BinaryWriter writer, List<uint> segmentSizes, string filename)
+        private static async Task loadLZXAsync(BinaryReader reader, BinaryWriter writer, List<uint> segmentSizes, NDSFile file)
         {
             // Save the filenames and tasks for each segment.
             List<string> segmentFilenames = new(segmentSizes.Count);
@@ -95,17 +111,18 @@ namespace ContentUnpacker.Decompressors
                 uint segmentSize = segmentSizes[segmentIndex];
 
                 // Create the filename so that this thread and segment get a unique filename.
-                string segmentTempFilename = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, OutputFolderPath, TemporaryFolderPath, $"{filename}-{segmentIndex}"), ContentFileUtil.TemporaryExtension);
-                segmentFilenames.Add(segmentTempFilename);
+                string segmentTempFilename = Path.ChangeExtension($"{Path.GetFileName(file.Path).Replace('.', '_')}-{Environment.CurrentManagedThreadId}-{segmentIndex}", ContentFileUtil.TemporaryExtension);
+                string segmentTempFilePath = Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, TemporaryFolderPath, segmentTempFilename);
+                segmentFilenames.Add(segmentTempFilePath);
 
                 // Read the segment from the file into a new temporary file.
-                using BinaryWriter tempFileWriter = new(File.OpenWrite(segmentTempFilename));
+                using BinaryWriter tempFileWriter = new(File.OpenWrite(segmentTempFilePath));
                 for (uint byteIndex = 0; byteIndex < segmentSize; byteIndex++)
                     tempFileWriter.Write(reader.ReadByte());
                 tempFileWriter.Close();
 
                 // Run the decoder on the file.
-                ProcessStartInfo processStartInfo = new(decoderToolName, $"-d \"{segmentTempFilename}\"")
+                ProcessStartInfo processStartInfo = new(decoderToolName, $"-d \"{segmentTempFilePath}\"")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false,
@@ -141,7 +158,7 @@ namespace ContentUnpacker.Decompressors
             }
         }
 
-        private static async Task loadUncompressed(BinaryReader reader, BinaryWriter writer, uint uncompressedSize)
+        private static async Task loadUncompressedAsync(BinaryReader reader, BinaryWriter writer, uint uncompressedSize)
         {
             await Task.Run(() =>
             {
