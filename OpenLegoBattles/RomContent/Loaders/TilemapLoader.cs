@@ -1,22 +1,28 @@
-﻿using OpenLegoBattles.TilemapSystem;
-using GlobalShared.Content;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using GlobalShared.Content;
 using GlobalShared.Tilemaps;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using OpenLegoBattles.Graphics;
+using OpenLegoBattles.TilemapSystem;
+using System.IO;
 
 namespace OpenLegoBattles.RomContent.Loaders
 {
-    internal class TilemapLoader : RomContentLoader<Tilemap>
+    internal class TilemapLoader : RomContentLoader<TilemapData>
     {
+        #region Dependencies
+        private readonly GraphicsDevice graphicsDevice;
+        #endregion
+
         #region Constructors
-        public TilemapLoader(RomContentManager romContentManager) : base(romContentManager)
+        public TilemapLoader(RomContentManager romContentManager, GraphicsDevice graphicsDevice) : base(romContentManager)
         {
+            this.graphicsDevice = graphicsDevice;
         }
         #endregion
 
         #region Load Functions
-        public override Tilemap LoadFromPath(string path)
+        public override TilemapData LoadFromPath(string path)
         {
             // Apply the root folder and extension to the path.
             path = ContentFileUtil.CreateFullFilePath(romContentManager.BaseGameDirectory, ContentFileUtil.TilemapDirectoryName, path, ContentFileUtil.TilemapExtension);
@@ -25,53 +31,77 @@ namespace OpenLegoBattles.RomContent.Loaders
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 throw new FileNotFoundException("File could not be found.", path);
 
-            // Make a reader for the map file.
-            using BinaryReader reader = new(File.OpenRead(path));
+            return TilemapData.Load(path);
+        }
+        #endregion
 
-            // Load the basic map info.
-            string mapName = reader.ReadString();
-            string tilesheetName = reader.ReadString();
-            byte width = reader.ReadByte();
-            byte height = reader.ReadByte();
+        #region Helper Functions
+        public Spritesheet CreateTilePaletteTexture(TilemapData tilemapData, TilemapBlockPalette treePalette, TilemapBlockPalette fogPalette)
+        {
+            // Load the spritesheet for the tilemap.
+            Spritesheet spritesheet = romContentManager.Load<Spritesheet>(tilemapData.TilesheetName);
 
-            // Load the tile palette.
-            ushort tilePaletteCount = reader.ReadUInt16();
-            List<TilePreset> tilePalette = loadTilePalette(reader, tilePaletteCount);
+            // Get the texture loader.
+            TextureLoader textureLoader = (TextureLoader)romContentManager.GetLoaderForType<Texture2D>();
 
-            // Load the data layer.
-            TileData[,] mapData = loadMapData(reader, width, height);
+            // Make a new texture and add it to the texture loader.
+            const int textureDimensionBlocks = 30;
+            int textureWidth = spritesheet.TileSize.X * 3 * textureDimensionBlocks;
+            int textureHeight = spritesheet.TileSize.Y * 2 * textureDimensionBlocks;
+            RenderTarget2D texture = new(graphicsDevice, textureWidth, textureHeight);
+            textureLoader.AddManagedTexture(texture);
+            Spritesheet packedSpritesheet = new(texture, textureDimensionBlocks, textureDimensionBlocks);
 
+            // Create a spritebatch and prepare to draw to the texture.
+            using SpriteBatch creatorSpriteBatch = new(graphicsDevice);
+            graphicsDevice.SetRenderTarget(texture);
+            graphicsDevice.Clear(Color.Transparent);
+            creatorSpriteBatch.Begin();
 
-            // Create and return the tilemap.
-            return new Tilemap(tilesheetName, width, height, tilePalette, mapData);
+            // Write the trees, then the fog.
+            int destinationIndex = 0;
+            for (int i = 0; i < treePalette.Count; i++, destinationIndex++)
+                writeTileBlock(treePalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
+            for (int i = 0; i < fogPalette.Count; i++, destinationIndex++)
+                writeTileBlock(fogPalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
+
+            // Write the terrain last.
+            for (int i = 0; i < tilemapData.TilePalette.Count; i++, destinationIndex++)
+                writeTileBlock(tilemapData.TilePalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
+
+            creatorSpriteBatch.End();
+            graphicsDevice.SetRenderTarget(null);
+
+            // Unload the original texture.
+            textureLoader.Unload(spritesheet.Texture);
+
+            return packedSpritesheet;
         }
 
-        private static List<TilePreset> loadTilePalette(BinaryReader reader, ushort tilePaletteCount)
+        private void writeTileBlock(TilemapPaletteBlock block, int index, Spritesheet sourceSpritesheet, Spritesheet destinationSpritesheet, SpriteBatch creatorSpriteBatch)
         {
-            // Load the presets.
-            List<TilePreset> tilePalette = new List<TilePreset>(tilePaletteCount);
-            for (int i = 0; i < tilePaletteCount; i++)
-            {
-                TilePreset tilePreset = new TilePreset((ushort)i, reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16(), reader.ReadUInt16());
-                tilePalette.Add(tilePreset);
-            }
+            Point blockPosition = destinationSpritesheet.CalculateXYFromIndex(index);
+            int screenX = blockPosition.X * sourceSpritesheet.TileSize.X * 3;
+            int screenY = blockPosition.Y * sourceSpritesheet.TileSize.Y * 2;
+            int bottomRowScreenY = screenY + sourceSpritesheet.TileSize.Y;
 
-            // Return the loaded palette.
-            return tilePalette;
-        }
+            Rectangle source = sourceSpritesheet.CalculateSourceRectangle(block.TopLeft);
+            creatorSpriteBatch.Draw(sourceSpritesheet.Texture, new Rectangle(screenX, screenY, sourceSpritesheet.TileSize.X, sourceSpritesheet.TileSize.Y), source, Color.White);
 
-        private static TileData[,] loadMapData(BinaryReader reader, byte width, byte height)
-        {
-            // Create the array.
-            TileData[,] mapData = new TileData[width, height];
+            source = sourceSpritesheet.CalculateSourceRectangle(block.TopMiddle);
+            creatorSpriteBatch.Draw(sourceSpritesheet.Texture, new Rectangle(screenX + sourceSpritesheet.TileSize.X, screenY, sourceSpritesheet.TileSize.X, sourceSpritesheet.TileSize.Y), source, Color.White);
 
-            // Load the data into the array.
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                    mapData[x, y] = new TileData(reader.ReadUInt16());
+            source = sourceSpritesheet.CalculateSourceRectangle(block.TopRight);
+            creatorSpriteBatch.Draw(sourceSpritesheet.Texture, new Rectangle(screenX + (sourceSpritesheet.TileSize.X * 2), screenY, sourceSpritesheet.TileSize.X, sourceSpritesheet.TileSize.Y), source, Color.White);
 
-            // Return the array.
-            return mapData;
+            source = sourceSpritesheet.CalculateSourceRectangle(block.BottomLeft);
+            creatorSpriteBatch.Draw(sourceSpritesheet.Texture, new Rectangle(screenX, bottomRowScreenY, sourceSpritesheet.TileSize.X, sourceSpritesheet.TileSize.Y), source, Color.White);
+
+            source = sourceSpritesheet.CalculateSourceRectangle(block.BottomMiddle);
+            creatorSpriteBatch.Draw(sourceSpritesheet.Texture, new Rectangle(screenX + sourceSpritesheet.TileSize.X, bottomRowScreenY, sourceSpritesheet.TileSize.X, sourceSpritesheet.TileSize.Y), source, Color.White);
+
+            source = sourceSpritesheet.CalculateSourceRectangle(block.BottomRight);
+            creatorSpriteBatch.Draw(sourceSpritesheet.Texture, new Rectangle(screenX + (sourceSpritesheet.TileSize.X * 2), bottomRowScreenY, sourceSpritesheet.TileSize.X, sourceSpritesheet.TileSize.Y), source, Color.White);
         }
         #endregion
     }

@@ -10,7 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Content\ContentFileUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataTypes\DirectionMask.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TileData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TilemapBlockPalette.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TilemapPaletteBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TileType.cs" />
   </ItemGroup>
 </Project>

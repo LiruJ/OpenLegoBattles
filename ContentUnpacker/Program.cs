@@ -2,7 +2,6 @@
 
 using CommandLine;
 using ContentUnpacker;
-using Microsoft.Extensions.Logging.Abstractions;
 
 // Ensure arguments were given.
 if (args.Length < 2)
@@ -29,5 +28,4 @@ Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed((parsedOption
 });
 
 // Start the unpacker.
-RomUnpacker romUnpacker = new(options, NullLogger.Instance);
-await romUnpacker.UnpackFileAsync();
+await RomUnpacker.UnpackFileAsync(options);

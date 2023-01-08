@@ -4,6 +4,18 @@ namespace ContentUnpacker.NDSFS
 {
     internal class NDSFileSystem
     {
+        #region Constants
+        /// <summary>
+        /// What the rom file should start with.
+        /// </summary>
+        private const string fileMagicString = "LEGO BATTLES";
+
+        /// <summary>
+        /// The size of the expected file.
+        /// </summary>
+        private const long expectedFileSize = 0x8000000;
+        #endregion
+
         #region Fields
         private readonly Dictionary<ushort, NDSDirectory> directoriesByID = new();
 
@@ -116,8 +128,16 @@ namespace ContentUnpacker.NDSFS
         #endregion
 
         #region Load Functions
-        public static NDSFileSystem LoadFromRom(BinaryReader reader)
+        public static NDSFileSystem LoadFromRom(string filePath)
         {
+            // Create the binary reader for the file.
+            using BinaryReader reader = new(File.OpenRead(filePath));
+            if (!assertRomValidity(reader))
+                throw new Exception("Invalid ROM file");
+
+            // Write the starting string.
+            Console.WriteLine("Reading filesystem");
+
             // Create the file system.
             NDSFileSystem fileSystem = new();
 
@@ -154,8 +174,32 @@ namespace ContentUnpacker.NDSFS
             nameBuilder.Clear();
             fileSystem.registerAllFileAndDirectoryPaths(fileSystem.RootDirectory, nameBuilder);
 
+            // Write the stopping string.
+            Console.WriteLine($"Finished reading filesystem of {fileSystem.FilesById.Count} files and {fileSystem.DirectoriesByID.Count} directories");
+
             // Return the created file system.
             return fileSystem;
+        }
+
+        private static bool assertRomValidity(BinaryReader reader)
+        {
+            // Ensure the file is valid.
+            if (reader.BaseStream.Length != expectedFileSize)
+                throw new Exception($"Invalid filesize, expected: 0x{expectedFileSize:X8}, got: 0x{reader.BaseStream.Length:X8}");
+
+            // Ensure the file starts with "LEGO BATTLES".
+            for (int i = 0; i < fileMagicString.Length; i++)
+            {
+                // Get the current character.
+                char currentCharacter = reader.ReadChar();
+
+                // If the character is unexpected, stop.
+                if (currentCharacter != fileMagicString[i])
+                    throw new Exception($"Invalid character in magic string at 0x{reader.BaseStream.Position:X8} expected: {fileMagicString[i]}, got: {currentCharacter}");
+            }
+
+            // Return true, as the rom is valid.
+            return true;
         }
         #endregion
     }

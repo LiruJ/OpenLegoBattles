@@ -1,15 +1,6 @@
-﻿using ContentUnpacker.Loaders;
-using ContentUnpacker.Tilemaps;
-using System;
-using System.Collections.Generic;
+﻿using GlobalShared.Tilemaps;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ContentUnpacker.Spritesheets
 {
@@ -50,7 +41,7 @@ namespace ContentUnpacker.Spritesheets
         #endregion
 
         #region Tile Functions
-        public void WriteTileFromLoader(SpritesheetLoader source, PaletteLoader colourPalette, ushort sourceTileIndex, Bitmap? mask = null, ushort? maskTileIndex = null)
+        public void WriteTileFromLoader(SpritesheetLoader source, ColourPaletteLoader colourPalette, ushort sourceTileIndex, Bitmap? mask = null, ushort? maskTileIndex = null)
         {
             // Calculate the x and y position on the saved spritesheet.
             int tileX = CurrentTileIndex % WidthInTiles;
@@ -100,7 +91,7 @@ namespace ContentUnpacker.Spritesheets
             CurrentTileIndex++;
         }
 
-        public void WriteBlockFromLoader(SpritesheetLoader source, PaletteLoader colourPalette, TilemapPaletteBlock block, Bitmap? mask = null, ushort? maskBlockIndex = null)
+        public void WriteBlockFromLoader(SpritesheetLoader source, ColourPaletteLoader colourPalette, TilemapPaletteBlock block, Bitmap? mask = null, ushort? maskBlockIndex = null)
         {
             ushort? maskOffset = mask == null ? null : 0;
 

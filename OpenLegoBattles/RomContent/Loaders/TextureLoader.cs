@@ -2,6 +2,7 @@
 using GlobalShared.Content;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OpenLegoBattles.RomContent.Loaders
 {
@@ -16,6 +17,11 @@ namespace OpenLegoBattles.RomContent.Loaders
         /// The cache of loaded textures, keyed by full path (no extension).
         /// </summary>
         private readonly Dictionary<string, Texture2D> cachedTextures = new();
+
+        /// <summary>
+        /// The collection of textures that are disposed of when the content manager is unloaded.
+        /// </summary>
+        private readonly HashSet<Texture2D> managedTextures = new();
         #endregion
 
         #region Constructors
@@ -23,6 +29,21 @@ namespace OpenLegoBattles.RomContent.Loaders
         {
             this.graphicsDevice = graphicsDevice;
         }
+        #endregion
+
+        #region Cache Functions
+        /// <summary>
+        /// Adds a texture to the managed textures collection so that when <see cref="Unload"/> is called, the texture is disposed.
+        /// </summary>
+        /// <param name="texture"> The texture to manage. </param>
+        public void AddManagedTexture(Texture2D texture) => managedTextures.Add(texture);
+
+        /// <summary>
+        /// Removes a texture from the managed textures collection.
+        /// </summary>
+        /// <param name="texture"> The texture to remove. </param>
+        /// <seealso cref="AddManagedTexture(Texture2D)"/>
+        public void RemoveManagedTexture(Texture2D texture) => managedTextures.Remove(texture);
         #endregion
 
         #region Load Functions
@@ -36,17 +57,33 @@ namespace OpenLegoBattles.RomContent.Loaders
             {
                 texture = Texture2D.FromFile(graphicsDevice, path);
                 cachedTextures.Add(path, texture);
+                AddManagedTexture(texture);
             }
-
+            
             // Return the cached or loaded texture.
             return texture;
         }
 
+        public void Unload(Texture2D texture)
+        {
+            // Dispose of the texture and remove it from the collections.
+            if (!texture.IsDisposed) texture.Dispose();
+            managedTextures.Remove(texture);
+            // TODO: Make this better.
+            foreach (KeyValuePair<string, Texture2D> otherTexture in cachedTextures)
+                if (texture == otherTexture.Value)
+                {
+                    cachedTextures.Remove(otherTexture.Key);
+                    break;
+                }
+        }
+
         public void Unload()
         {
-            foreach (Texture2D texture in cachedTextures.Values)
+            foreach (Texture2D texture in managedTextures)
                 if (!texture.IsDisposed) texture.Dispose();
             cachedTextures.Clear();
+            managedTextures.Clear();
         }
 
         public void Dispose() => Unload();

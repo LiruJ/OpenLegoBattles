@@ -50,13 +50,17 @@ namespace OpenLegoBattles.RomContent
         }
         #endregion
 
+        #region Loader Functions
+        public RomContentLoader<T> GetLoaderForType<T>() where T : class => (RomContentLoader<T>)contentLoadersByType[typeof(T)];
+        #endregion
+
         #region Registration Functions
         public void RegisterLoader<T>(IRomContentLoader contentLoader) => contentLoadersByType.Add(typeof(T), contentLoader);
 
         private void registerDefaultLoaders()
         {
             RegisterLoader<Texture2D>(new TextureLoader(this, graphicsDevice));
-            RegisterLoader<Tilemap>(new TilemapLoader(this));
+            RegisterLoader<TilemapData>(new TilemapLoader(this, graphicsDevice));
             RegisterLoader<Spritesheet>(new TilesetLoader(this));
         }
         #endregion
@@ -105,15 +109,23 @@ namespace OpenLegoBattles.RomContent
                 CreateNoWindow = true,
 #endif
                 UseShellExecute = false,
+                RedirectStandardOutput = true
             };
-
             Process unpackerProcess = new()
             {
                 StartInfo = processStartInfo,
             };
+            unpackerProcess.OutputDataReceived += UnpackerProcess_OutputDataReceived;
             unpackerProcess.Start();
+            unpackerProcess.BeginOutputReadLine();
+
 
             await unpackerProcess.WaitForExitAsync();
+        }
+
+        private void UnpackerProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            Console.WriteLine(e.Data);
         }
         #endregion
     }

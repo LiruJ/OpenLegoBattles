@@ -117,7 +117,7 @@ namespace ContentUnpacker.NDSFS
                 if (!isEnd)
                 {
                     // Read the name of the file/directory.
-                    string name = NDSFileUtil.ReadString(reader, nameBuilder, nameLength);
+                    string name = reader.ReadString(nameBuilder, nameLength);
 
                     // If the content is a directory, load its ID, load it, and add it as such.
                     if (isDirectory)

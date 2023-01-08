@@ -32,12 +32,41 @@ namespace ContentUnpacker.NDSFS
         #endregion
 
         #region String Functions
-        public static string ReadString(BinaryReader reader, StringBuilder stringBuilder, int length)
+        /// <summary>
+        /// Reads the string with the given length from the given reader and fills the given string builder.
+        /// </summary>
+        /// <param name="reader"> The reader to use to read the string. After reading the string, the reader's position is immediately after the string. </param>
+        /// <param name="stringBuilder"> The string builder to fill. This is cleared first. </param>
+        /// <param name="length"> The length of the string to read. </param>
+        /// <returns> The read string. </returns>
+        public static string ReadString(this BinaryReader reader, StringBuilder stringBuilder, int length)
         {
             stringBuilder.Clear();
             stringBuilder.Capacity = Math.Max(stringBuilder.Capacity, length);
             for (int i = 0; i < length; i++)
                 stringBuilder.Append(reader.ReadChar());
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Reads characters from the given <paramref name="reader"/> until a null character (value of <c>0</c>) is found.
+        /// </summary>
+        /// <param name="reader"> The reader to use to read the string. After reading the string, the reader's position is immediately after the null character. </param>
+        /// <returns> The read string without the null character. </returns>
+        public static string ReadNullTerminatedString(this BinaryReader reader)
+        {
+            // Read the string until a null character is found.
+            bool stringContinue = true;
+            StringBuilder stringBuilder = new();
+            while (stringContinue)
+            {
+                char currentChar = reader.ReadChar();
+                stringContinue = currentChar != 0;
+                if (stringContinue)
+                    stringBuilder.Append(currentChar);
+            }
+
+            // Return the string.
             return stringBuilder.ToString();
         }
         #endregion

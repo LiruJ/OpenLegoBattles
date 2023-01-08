@@ -11,6 +11,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "GameShared", "GameShared\Ga
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "GlobalShared", "GlobalShared\GlobalShared.shproj", "{23261ED7-F7F1-4E55-B311-EE3148B11818}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameTests", "GameTests\GameTests.csproj", "{039E6013-02FB-4CD4-BF32-4272F76E62F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{039E6013-02FB-4CD4-BF32-4272F76E62F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{039E6013-02FB-4CD4-BF32-4272F76E62F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{039E6013-02FB-4CD4-BF32-4272F76E62F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{039E6013-02FB-4CD4-BF32-4272F76E62F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -35,6 +41,9 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		GameShared\GameShared.projitems*{0121ca07-48e6-4b39-81e0-02dff7d1bba8}*SharedItemsImports = 5
 		GlobalShared\GlobalShared.projitems*{0121ca07-48e6-4b39-81e0-02dff7d1bba8}*SharedItemsImports = 5
+		GameShared\GameShared.projitems*{039e6013-02fb-4cd4-bf32-4272f76e62f7}*SharedItemsImports = 5
+		GlobalShared\GlobalShared.projitems*{039e6013-02fb-4cd4-bf32-4272f76e62f7}*SharedItemsImports = 5
+		GlobalShared\GlobalShared.projitems*{23261ed7-f7f1-4e55-b311-ee3148b11818}*SharedItemsImports = 13
 		GlobalShared\GlobalShared.projitems*{974efee5-cba8-4675-9e0f-6e0c1cbfae34}*SharedItemsImports = 5
 		GameShared\GameShared.projitems*{a0cdbd0e-3a41-42b7-9425-a838bc2c7383}*SharedItemsImports = 13
 	EndGlobalSection

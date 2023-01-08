@@ -1,9 +1,9 @@
 ﻿using ContentUnpacker.NDSFS;
 using System.Drawing;
 
-namespace ContentUnpacker.Loaders
+namespace ContentUnpacker.Spritesheets
 {
-    internal class PaletteLoader : ContentLoader
+    internal class ColourPaletteLoader
     {
         #region Constants
         /// <summary>
@@ -15,33 +15,57 @@ namespace ContentUnpacker.Loaders
         /// The magic number of the palette section.
         /// </summary>
         private const uint paletteMagicWord = 0x504C5454;
+
+        private const string fileExtension = "NCLR";
         #endregion
 
         #region Fields
-        private byte[] paletteData = Array.Empty<byte>();
+        private readonly byte[] paletteData = Array.Empty<byte>();
         #endregion
 
         #region Properties
-        public uint PaletteSize { get; private set; }
+        /// <summary>
+        /// The number of colours in this palette.
+        /// </summary>
+        public uint PaletteSize { get; }
         #endregion
 
         #region Get Functions
-        public Color GetColourAtIndex(int index) 
-            => index == 0 ? Color.Transparent : Color.FromArgb(paletteData[index * 3], paletteData[(index * 3) + 1], paletteData[(index * 3) + 2]);
+        public Color GetColourAtIndex(int index)
+            => index == 0 ? Color.Transparent : Color.FromArgb(paletteData[index * 3], paletteData[index * 3 + 1], paletteData[index * 3 + 2]);
+        #endregion
+
+        #region Constructors
+        private ColourPaletteLoader(uint paletteSize)
+        {
+            PaletteSize = paletteSize;
+            paletteData = new byte[PaletteSize * 3];
+        }
         #endregion
 
         #region Load Functions
-        public override void Load(BinaryReader reader)
+        /// <summary>
+        /// Loads the colour palette at the given path.
+        /// </summary>
+        /// <param name="filePath"> The path of the NCLR file. </param>
+        /// <returns> The loaded palette. </returns>
+        public static ColourPaletteLoader Load(string filePath)
         {
-            // Load the header first.
-            NDSFileUtil.loadGenericHeader(reader, true);
-            loadHeader(reader);
+            // Create the reader.
+            FileStream file = File.OpenRead(Path.ChangeExtension(filePath, fileExtension));
+            using BinaryReader reader = new(file);
 
-            // Load the palette data.
-            loadPalette(reader);
+            // Load the header first and create the palette with the loaded size.
+            NDSFileUtil.loadGenericHeader(reader, true);
+            uint paletteSize = loadHeader(reader);
+            ColourPaletteLoader palette = new(paletteSize);
+
+            // Load and returns the palette data.
+            palette.loadPalette(reader);
+            return palette;
         }
 
-        private void loadHeader(BinaryReader reader)
+        private static uint loadHeader(BinaryReader reader)
         {
             // Ensure the magic word matches.
             if (reader.ReadUInt32() != paletteMagicWord)
@@ -55,14 +79,11 @@ namespace ContentUnpacker.Loaders
             uint offset = reader.ReadUInt32();
 
             // Set the palette size divided by two. The size is normally in bytes, and there's 2 bytes per colour.
-            PaletteSize = paletteSize / 2;
+            return paletteSize / 2;
         }
 
         private void loadPalette(BinaryReader reader)
         {
-            // Create the data array.
-            paletteData = new byte[PaletteSize * 3];
-
             // Write all colours.
             for (int colourIndex = 0; colourIndex < PaletteSize; colourIndex++)
                 readColour(reader, colourIndex);
@@ -83,8 +104,8 @@ namespace ContentUnpacker.Loaders
 
             // Save the colour.
             paletteData[colourIndex * 3] = r;
-            paletteData[(colourIndex * 3) + 1] = g;
-            paletteData[(colourIndex * 3) + 2] = b;
+            paletteData[colourIndex * 3 + 1] = g;
+            paletteData[colourIndex * 3 + 2] = b;
         }
         #endregion
     }

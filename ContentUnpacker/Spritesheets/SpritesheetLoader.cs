@@ -1,13 +1,10 @@
-﻿using ContentUnpacker.Decompressors;
-using ContentUnpacker.NDSFS;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ContentUnpacker.NDSFS;
 
 namespace ContentUnpacker.Spritesheets
 {
+    /// <summary>
+    /// Handles loading a spritesheet (NCGR file) and indexing it.
+    /// </summary>
     internal class SpritesheetLoader : IDisposable
     {
         #region Constants
@@ -25,11 +22,18 @@ namespace ContentUnpacker.Spritesheets
         /// The magic number of the tile graphic data section.
         /// </summary>
         private const uint tileGraphicMagicWord = 0x43484152;
+
+        /// <summary>
+        /// The default width and height of a single tile.
+        /// </summary>
+        public const byte TileSize = 8;
         #endregion
 
         #region Fields
         private readonly BinaryReader reader;
+        #endregion
 
+        #region Properties
         /// <summary>
         /// The number of tiles in this file.
         /// </summary>
@@ -45,8 +49,8 @@ namespace ContentUnpacker.Spritesheets
         /// </summary>
         public ushort CurrentTileIndex
         {
-            get => (ushort)Math.Floor((reader.BaseStream.Position - StartPosition) / 64f);
-            set => reader.BaseStream.Position = StartPosition + (value * 64);
+            get => (ushort)Math.Floor((reader.BaseStream.Position - StartPosition) / (float)(TileSize * TileSize));
+            set => reader.BaseStream.Position = StartPosition + (value * TileSize * TileSize);
         }
         #endregion
 
@@ -60,10 +64,19 @@ namespace ContentUnpacker.Spritesheets
         #endregion
 
         #region Read Functions
+        /// <summary>
+        /// Reads the next byte of the reader.
+        /// </summary>
+        /// <returns> The read byte. </returns>
         public byte ReadNextByte() => reader.ReadByte();
         #endregion
 
         #region Load Functions
+        /// <summary>
+        /// Loads the file at the given path as a spritesheet.
+        /// </summary>
+        /// <param name="filePath"> The path of the file to load. </param>
+        /// <returns> The loaded spritesheet. </returns>
         public static SpritesheetLoader Load(string filePath)
         {
             // Load the file.
@@ -102,15 +115,12 @@ namespace ContentUnpacker.Spritesheets
             uint headerOffset = reader.ReadUInt32();
 
             // Return the tile count.
-            return (ushort)(tileDataSizeBytes / 64);
+            return (ushort)(tileDataSizeBytes / (TileSize * TileSize));
         }
         #endregion
 
         #region Disposal Functions
-        public void Dispose()
-        {
-            reader.Dispose();
-        }
+        public void Dispose() => reader.Dispose();
         #endregion
     }
 }

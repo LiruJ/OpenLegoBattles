@@ -34,8 +34,6 @@ namespace ContentUnpacker.Decompressors
         /// The folder path relative to the <see cref="OutputFolderPath"/> that stores the temporary files used to communicate with the decompression tools.
         /// </summary>
         public const string TemporaryFolderPath = "Temporary";
-
-
         #endregion
 
         #region Load Functions
@@ -130,9 +128,7 @@ namespace ContentUnpacker.Decompressors
                 };
                 Process? process = new();
                 process.StartInfo = processStartInfo;
-                process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
                 process.Start();
-                process.BeginOutputReadLine();
                 if (process == null) throw new Exception("LZX processor exe could not be opened.");
 
                 // Add the done task to the list.

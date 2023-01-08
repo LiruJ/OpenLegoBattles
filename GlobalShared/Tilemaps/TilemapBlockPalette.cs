@@ -1,11 +1,17 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 
-namespace ContentUnpacker.Tilemaps
+namespace GlobalShared.Tilemaps
 {
-    internal class TilemapPalette : IEnumerable<TilemapPaletteBlock>
+    public class TilemapBlockPalette : IEnumerable<TilemapPaletteBlock>
     {
         #region Constants
-        private const string fileExtension = ".tbp";
+        private const string fileExtension = "tbp";
+        #endregion
+
+        #region Operators
+        public TilemapPaletteBlock this[int i] => blocks[i];
         #endregion
 
         #region Fields
@@ -14,12 +20,14 @@ namespace ContentUnpacker.Tilemaps
 
         #region Properties
         public IReadOnlyList<TilemapPaletteBlock> Blocks => blocks;
+
+        public int Count => blocks.Count;
         #endregion
 
         #region Enumeration Functions
-        public IEnumerator<TilemapPaletteBlock> GetEnumerator() => ((IEnumerable<TilemapPaletteBlock>)blocks).GetEnumerator();
+        public IEnumerator<TilemapPaletteBlock> GetEnumerator() => blocks.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)blocks).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         #endregion
 
         #region Save Functions
@@ -50,10 +58,10 @@ namespace ContentUnpacker.Tilemaps
         #endregion
 
         #region Load Functions
-        public static bool TryLoadFromFile(string filePath, out TilemapPalette? palette, ushort? count = null, bool is16Bit = true)
+        public static bool TryLoadFromFile(string filePath, out TilemapBlockPalette? palette, ushort? count = null, bool is16Bit = true, string? extension = fileExtension)
         {
             // If the file does not exist, return false with no palette.
-            if (!File.Exists(Path.ChangeExtension(filePath, fileExtension)))
+            if (!File.Exists(Path.ChangeExtension(filePath, extension)))
             {
                 palette = null;
                 return false;
@@ -65,17 +73,21 @@ namespace ContentUnpacker.Tilemaps
             }
         }
 
-        public static TilemapPalette LoadFromFile(string filePath, ushort? count = null, bool is16Bit = true)
+        public static TilemapBlockPalette LoadFromFile(string filePath, ushort? count = null, bool is16Bit = true, string? extension = fileExtension)
         {
-            // Create the reader.
-            using BinaryReader reader = new(File.OpenRead(Path.ChangeExtension(filePath, fileExtension)));
+            // Create the reader and read the file.
+            using BinaryReader reader = new(File.OpenRead(Path.ChangeExtension(filePath, extension)));
+            return LoadFromFile(reader, count, is16Bit);
+        }
 
+        public static TilemapBlockPalette LoadFromFile(BinaryReader reader, ushort? count = null, bool is16Bit = true)
+        {
             // Read the count if none was given, otherwise skip it.
             if (count == null) count = reader.ReadUInt16();
             else reader.BaseStream.Position += 2;
 
             // Create the palette and load from the file into it.
-            TilemapPalette palette = new();
+            TilemapBlockPalette palette = new();
             palette.loadBlocks(reader, count.Value, is16Bit);
             return palette;
         }

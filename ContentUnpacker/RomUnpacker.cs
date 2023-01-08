@@ -1,13 +1,7 @@
-﻿using ContentUnpacker.Data;
-using ContentUnpacker.Decompressors;
+﻿using ContentUnpacker.Decompressors;
 using ContentUnpacker.NDSFS;
-using ContentUnpacker.Processors;
 using ContentUnpacker.Tilemaps;
-using ContentUnpacker.Utils;
-using Microsoft.Extensions.Logging;
-using GlobalShared.Content;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Xml;
 
 namespace ContentUnpacker
@@ -15,7 +9,7 @@ namespace ContentUnpacker
     /// <summary>
     /// Unpacks and decompresses all required data from the rom file and saves it to an output.
     /// </summary>
-    internal class RomUnpacker
+    internal static class RomUnpacker
     {
         #region Constants
         /// <summary>
@@ -23,15 +17,11 @@ namespace ContentUnpacker
         /// </summary>
         public const string WorkingFolderName = "Working";
 
-        /// <summary>
-        /// What the rom file should start with.
-        /// </summary>
-        private const string fileMagicString = "LEGO BATTLES";
+        public const byte MainVersion = 0;
 
-        /// <summary>
-        /// The size of the expected file.
-        /// </summary>
-        private const long expectedFileSize = 0x8000000;
+        public const byte SubVersion = 1;
+
+        public const byte PatchVersion = 0;
         #endregion
 
         #region XML Constants
@@ -41,128 +31,33 @@ namespace ContentUnpacker
         private const string mainNodeName = "Content";
         #endregion
 
-        #region Fields
-        private readonly Dictionary<uint, Type> contentProcessorsByName = new();
-
-        private readonly ConcurrentDictionary<string, int> outputOffsets = new();
-
-        private readonly ConcurrentQueue<BinaryReader> pooledBinaryReaders = new();
-
-        private NDSFileSystem fileSystem;
-        #endregion
-
-        #region Properties
-        public CommandLineOptions Options { get; }
-
-        public ILogger Logger { get; }
-
-        public DataCache DataCache { get; }
-        #endregion
-
-        #region Constructors
-        public RomUnpacker(CommandLineOptions options, ILogger logger)
-        {
-            // Set dependencies.
-            Options = options;
-            Logger = logger;
-
-            DataCache = new(this);
-
-            // Register the processors.
-            registerProcessors();
-        }
-        #endregion
-
-        #region Initialisation Functions
-        private void registerProcessors()
-        {
-            contentProcessorsByName.Add(TileGraphicProcessor.MagicWord, typeof(TileGraphicProcessor));
-            contentProcessorsByName.Add(TilemapProcessor.MagicWord, typeof(TilemapProcessor));
-        }
-        #endregion
-
-        #region Reader Functions
-        public BinaryReader GetReaderForFilePath(string filePath, out bool manualClose)
-        {
-            string rawFilename = Path.GetFileNameWithoutExtension(filePath);
-
-            // If the node name is associated with an offset in the main file, get a pooled reader.
-            BinaryReader? reader;
-            manualClose = !outputOffsets.TryGetValue(rawFilename, out int offsetPosition);
-            if (!manualClose)
-            {
-                // Get or create a pooled binary reader.
-                if (!pooledBinaryReaders.TryDequeue(out reader))
-                    reader = new BinaryReader(File.OpenRead(Options.InputFile));
-
-                // Move the binary reader to the offset.
-                reader.BaseStream.Position = offsetPosition;
-            }
-            // Otherwise, a new reader has to be made to read the specific decompressed file.
-            else
-            {
-                // Get the full path of the file.
-                string fullPath = Path.ChangeExtension(Path.IsPathFullyQualified(filePath) ? filePath : Path.GetFullPath(filePath), ContentFileUtil.BinaryExtension);
-
-                // Open the file in a new reader.
-                reader = new(File.OpenRead(fullPath));
-            }
-
-            // Return the reader.
-            return reader;
-        }
-
-        public void ReturnReader(BinaryReader reader) => pooledBinaryReaders.Enqueue(reader);
-        #endregion
-
         #region Load Functions
-        public async Task UnpackFileAsync()
+        public static async Task UnpackFileAsync(CommandLineOptions options)
         {
+            // Write the starting string.
+            Console.WriteLine($"Rom Unpacker {MainVersion}.{SubVersion}.{PatchVersion} started");
+            
             // Check that the parameters are correct.
-            if (string.IsNullOrWhiteSpace(Options.InputFile) || !File.Exists(Options.InputFile))
-            {
-                Logger.LogCritical("Input file is invalid or does not exist: {inputPath}", Options.InputFile);
-                throw new FileNotFoundException("Input file is invalid or does not exist.", Options.InputFile);
-            }
-            if (string.IsNullOrWhiteSpace(Options.OutputFolder))
-            {
-                Logger.LogCritical("'{outputDirectoryPath}' cannot be null or whitespace.", nameof(Options.OutputFolder));
-                throw new ArgumentException($"'{nameof(Options.OutputFolder)}' cannot be null or whitespace.", nameof(Options.OutputFolder));
-            }
-
-            // Create the binary reader for the file.
-            BinaryReader reader = new(File.OpenRead(Options.InputFile));
-
-            // Ensure the file is valid.
-            if (reader.BaseStream.Length != expectedFileSize)
-                throw new Exception($"Invalid filesize, expected: 0x{expectedFileSize:X8}, got: 0x{reader.BaseStream.Length:X8}");
-
-            // Ensure the file starts with "LEGO BATTLES".
-            for (int i = 0; i < fileMagicString.Length; i++)
-            {
-                // Get the current character.
-                char currentCharacter = reader.ReadChar();
-
-                // If the character is unexpected, stop.
-                if (currentCharacter != fileMagicString[i])
-                    throw new Exception($"Invalid character in magic string at 0x{reader.BaseStream.Position:X8} expected: {fileMagicString[i]}, got: {currentCharacter}");
-            }
+            if (string.IsNullOrWhiteSpace(options.InputFile) || !File.Exists(options.InputFile))
+                throw new FileNotFoundException("Input file is invalid or does not exist.", options.InputFile);
+            if (string.IsNullOrWhiteSpace(options.OutputFolder))
+                throw new ArgumentException($"'{nameof(options.OutputFolder)}' cannot be null or whitespace.", nameof(options.OutputFolder));
 
             // Create the file system from the rom.
-            fileSystem = NDSFileSystem.LoadFromRom(reader);
-
-            // Pool the reader.
-            pooledBinaryReaders.Enqueue(reader);
-
+            NDSFileSystem fileSystem = NDSFileSystem.LoadFromRom(options.InputFile);
+            
             // Load the xml file.
             XmlDocument contentDescription = new();
             contentDescription.Load("OffsetOutputs.xml");
-
+            
             // Load the file's nodes.
-            await loadMainNodeAsync(contentDescription);
+            await loadMainNodeAsync(options, fileSystem, contentDescription);
+
+            // Write the stopping string.
+            Console.WriteLine($"Rom Unpacker has successfully unpacked rom. Enjoy!");
         }
 
-        private async Task loadMainNodeAsync(XmlDocument contentDescription)
+        private static async Task loadMainNodeAsync(CommandLineOptions options, NDSFileSystem fileSystem, XmlDocument contentDescription)
         {
             // TODO: Implement logging rather than silent errors or exceptions.
 
@@ -175,20 +70,13 @@ namespace ContentUnpacker
             ConcurrentQueue<BinaryReader> pooledBinaryReaders = new();
 
             // Create the unpacked files directory.
-            //if (Directory.Exists(WorkingFolderName))
-            //    Directory.Delete(WorkingFolderName, true);
-            //Directory.CreateDirectory(WorkingFolderName);
-
-            // Create the stages.
-            DecompressionStage decompressionStage = new(this, fileSystem);
-            TilemapOptimiserStage tilemapOptimiserStage = new(Options);
+            if (Directory.Exists(WorkingFolderName))
+                Directory.Delete(WorkingFolderName, true);
+            Directory.CreateDirectory(WorkingFolderName);
 
             // Begin each stage in sequence.
-            //await decompressionStage.BeginAsync(mainNode);
-            await tilemapOptimiserStage.BeginAsync();
-
-            // Process chunks.
-            //processChunks(mainNode);
+            await DecompressionStage.BeginAsync(options, fileSystem, mainNode);
+            await TilemapOptimiserStage.BeginAsync(options);
 
 #if RELEASE
             // Delete the unpacked folder.
@@ -199,47 +87,6 @@ namespace ContentUnpacker
             foreach (BinaryReader reader in pooledBinaryReaders)
                 reader.Close();
             pooledBinaryReaders.Clear();
-        }
-        #endregion
-
-        #region Process Functions
-        private void processChunks(XmlNode mainNode)
-        {
-            // Go over each node again, but this time take the outputs from decompression and run them through the processors.
-            foreach (XmlNode contentNode in mainNode)
-            {
-                // Ignore comments.
-                if (contentNode.NodeType != XmlNodeType.Element) continue;
-
-                // Get a reader for this file.
-                string filePath = Path.ChangeExtension(Path.Combine(WorkingFolderName, DecompressionStage.OutputFolderPath, contentNode.Name), ContentFileUtil.BinaryExtension);
-                BinaryReader reader = GetReaderForFilePath(filePath, out bool manualClose);
-
-                // Process the chunk.
-                processChunk(reader, contentNode);
-
-                // If the chunk was read from a file, the reader must be closed.
-                if (manualClose) reader.Close();
-            }
-        }
-
-        private void processChunk(BinaryReader reader, XmlNode contentNode)
-        {
-            // Get the loader type from the magic 4 chars.
-            uint magicWord = reader.ReadUInt32();
-
-            // Try get the processor associated with the name.
-            if (!contentProcessorsByName.TryGetValue(magicWord, out Type? processorType))
-            {
-                Console.WriteLine($"Content node's {contentNode.Name}'s file's magic word {magicWord} is not associated with any processor; skipping processing step.");
-                return;
-            }
-
-            // Create the processor instance.
-            ContentProcessor processor = (ContentProcessor?)Activator.CreateInstance(processorType, this, reader, contentNode) ?? throw new Exception("Processor name was valid, yet processor failed to create.");
-
-            // Process the data.
-            processor.Process();
         }
         #endregion
     }

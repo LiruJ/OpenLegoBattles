@@ -32,6 +32,11 @@ namespace GlobalShared.Content
         /// The extension used for tilemap files.
         /// </summary>
         public const string TilemapExtension = "map";
+
+        /// <summary>
+        /// The extension used for tile rule set files.
+        /// </summary>
+        public const string TileRuleSetExtension = "trs";
         #endregion
 
         #region Directories

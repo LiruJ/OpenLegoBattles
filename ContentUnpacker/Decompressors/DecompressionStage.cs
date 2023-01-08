@@ -1,17 +1,30 @@
 ﻿using ContentUnpacker.NDSFS;
 using ContentUnpacker.Utils;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace ContentUnpacker.Decompressors
 {
-    internal class DecompressionStage
+    internal static class DecompressionStage
     {
+        private class progressTracker
+        {
+            /// <summary>
+            /// The total number of tasks to complete.
+            /// </summary>
+            public int TotalCount { get; set; }
+
+            /// <summary>
+            /// The current number of completed tasks.
+            /// </summary>
+            public int DoneCount { get; set; } = 0;
+
+            /// <summary>
+            /// The percentage of tasks completed, from 0 to 1.
+            /// </summary>
+            public float ProgressPercentage => (float)DoneCount / TotalCount;
+        }
+
         #region Constants
         /// <summary>
         /// The path of the folder where the decompressed files are stored, relative to the working folder.
@@ -19,48 +32,52 @@ namespace ContentUnpacker.Decompressors
         public const string OutputFolderPath = "Decompressed";
         #endregion
 
-        #region Dependencies
-        private readonly RomUnpacker romUnpacker;
-        private readonly NDSFileSystem fileSystem;
-        #endregion
-
-        #region Fields
-        private readonly ConcurrentQueue<BinaryReader> pooledReaders = new();
-        #endregion
-
-        #region Constructors
-        public DecompressionStage(RomUnpacker romUnpacker, NDSFileSystem fileSystem)
-        {
-            this.romUnpacker = romUnpacker;
-            this.fileSystem = fileSystem;
-        }
-        #endregion
-
         #region Stage Functions
-        public async Task BeginAsync(XmlNode mainNode)
+        public static async Task BeginAsync(CommandLineOptions options, NDSFileSystem fileSystem, XmlNode mainNode)
         {
+            // Write the starting string.
+            Console.WriteLine("Extracting files");
+
             // Create the required directories.
             Directory.CreateDirectory(Path.Combine(RomUnpacker.WorkingFolderName, OutputFolderPath, LegoDecompressor.TemporaryFolderPath));
 
-            // Save the decompression tasks.
-            List<Task> decompressionTasks = new();
+            // Create the reader pool.
+            ConcurrentQueue<BinaryReader> pooledReaders = new();
 
             // Go over each content node in the main node.
+            progressTracker progressTracker = new();
+            Progress<string> progress = new((filename) => reportProgress(filename, progressTracker));
+            List<Task> outputTasks = new();
             foreach (XmlNode contentNode in mainNode)
             {
-                // Ignore comments.
+                // Ignore comments and load each node.
                 if (contentNode.NodeType != XmlNodeType.Element) continue;
-
-                decompressContentNode(contentNode, decompressionTasks);
+                decompressContentNode(options, fileSystem, contentNode, pooledReaders, outputTasks, progress);
             }
 
-            // Wait for the tasks to be done.
-            await Task.WhenAll(decompressionTasks);
+            // Handle setting up the progress reporter.
+            progressTracker.TotalCount = outputTasks.Count;
+
+            // Start decompressing the files.
+            await Task.WhenAll(outputTasks);
+
+            // Close the readers.
+            foreach (BinaryReader reader in pooledReaders)
+                reader.Dispose();
+
+            // Write the ending string.
+            Console.WriteLine("Finished extracting files");
+        }
+
+        private static void reportProgress(string filename, progressTracker progressTracker)
+        {
+            progressTracker.DoneCount++;
+            Console.WriteLine($"{progressTracker.ProgressPercentage:P0}\t- {filename}");
         }
         #endregion
 
         #region Decompression Functions
-        private void decompressContentNode(XmlNode contentNode, List<Task> decompressionTasks)
+        private static void decompressContentNode(CommandLineOptions options, NDSFileSystem fileSystem, XmlNode contentNode, ConcurrentQueue<BinaryReader> pooledReaders, List<Task> outputTasks, IProgress<string> progress)
         {
             // Get the file/directory attributes.
             bool hasFile = contentNode.TryGetTextAttribute("RomFile", out string romFilePath);
@@ -81,49 +98,63 @@ namespace ContentUnpacker.Decompressors
             }
 
             // Handle decompressing the content.
-            if (hasDirectory) decompressDirectory(contentNode, romDirectoryPath, decompressionTasks);
-            else if (hasFile) decompressFile(contentNode, romFilePath, decompressionTasks);
+            if (hasDirectory)
+            {
+                IEnumerator<Task> directoryTasks = decompressDirectory(options, fileSystem, contentNode, romDirectoryPath, pooledReaders, progress);
+                while (directoryTasks.MoveNext())
+                    outputTasks.Add(directoryTasks.Current);
+            }
+            else if (hasFile)
+                outputTasks.Add(decompressFile(options, fileSystem, contentNode, romFilePath, pooledReaders, progress));
         }
 
-        private void decompressDirectory(XmlNode contentNode, string romDirectoryPath, List<Task> decompressionTasks)
+        private static IEnumerator<Task> decompressDirectory(CommandLineOptions options, NDSFileSystem fileSystem, XmlNode contentNode, string romDirectoryPath, ConcurrentQueue<BinaryReader> pooledReaders, IProgress<string> progress)
         {
             // Ensure the directory exists.
             if (!fileSystem.DirectoriesByPath.TryGetValue(romDirectoryPath, out NDSDirectory? directory))
             {
                 Console.WriteLine($"Node {contentNode.Name} has an invalid rom directory path. Skipping.");
-                return;
+                yield break;
             }
 
             // Decompress each file.
             foreach (NDSFile contentFile in directory.Files)
-                decompressionTasks.Add(decompressFileAsync(contentFile));
+                yield return decompressFile(options, contentFile, pooledReaders, progress);
         }
 
-        private void decompressFile(XmlNode contentNode, string romFilePath, List<Task> decompressionTasks)
+        private static Task decompressFile(CommandLineOptions options, NDSFileSystem fileSystem, XmlNode contentNode, string romFilePath, ConcurrentQueue<BinaryReader> pooledReaders, IProgress<string> progress)
         {
             // Ensure the file exists.
             if (!fileSystem.FilesByPath.TryGetValue(romFilePath, out NDSFile? file))
             {
                 Console.WriteLine($"Node {contentNode.Name} has an invalid rom file path. Skipping.");
-                return;
+                return Task.CompletedTask;
             }
 
             // Decompress the file.
-            decompressionTasks.Add(decompressFileAsync(file));
+            return decompressFile(options, file, pooledReaders, progress);
         }
 
-        private async Task decompressFileAsync(NDSFile file)
+        private static Task decompressFile(CommandLineOptions options, NDSFile file, ConcurrentQueue<BinaryReader> pooledReaders, IProgress<string> progress)
         {
-            // Get or create a pooled binary reader and prepare it for the file.
-            if (!pooledReaders.TryDequeue(out BinaryReader? reader))
-                reader = new BinaryReader(File.OpenRead(romUnpacker.Options.InputFile));
-            reader.BaseStream.Position = file.Offset;
-
             // Decompress the file.
-            await LegoDecompressor.DecompressFileAsync(reader, file);
+            Task decompressionTask = Task.Run(async () =>
+            {
+                // Get or create a pooled binary reader and prepare it for the file.
+                if (!pooledReaders.TryDequeue(out BinaryReader? reader))
+                    reader = new BinaryReader(File.OpenRead(options.InputFile));
+                reader.BaseStream.Position = file.Offset;
 
-            // Add the reader back to the queue.
-            pooledReaders.Enqueue(reader);
+                // Decompress the file and report the progress.
+                await LegoDecompressor.DecompressFileAsync(reader, file);
+                progress.Report(file.Name);
+
+                // Add the reader back to the queue.
+                pooledReaders.Enqueue(reader);
+            });
+
+            // Return the task.
+            return decompressionTask;
         }
         #endregion
     }

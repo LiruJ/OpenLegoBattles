@@ -1,23 +1,30 @@
 ﻿using ContentUnpacker.Decompressors;
+using ContentUnpacker.NDSFS;
 using GlobalShared.Content;
 using GlobalShared.Tilemaps;
-using System.Text;
 
 namespace ContentUnpacker.Tilemaps
 {
-    internal class TilemapData : IDisposable
+    /// <summary>
+    /// Handles loading, analysing, and saving a raw tilemap from the rom file.
+    /// </summary>
+    internal class TilemapLoader : IDisposable
     {
-        #region Constants
-        private const string fileExtension = ".map";
-
-        public const string MapsDirectoryName = "Maps";
-        #endregion
-
         #region Dependencies
         private readonly BinaryReader reader;
         #endregion
 
+        #region Constants
+        /// <summary>
+        /// The folder where the maps are found by default.
+        /// </summary>
+        public static string InputRootDirectory => Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, ContentFileUtil.TilemapDirectoryName);
+        #endregion
+
         #region Fields
+        /// <summary>
+        /// The map between the original block palette and the optimised block palette for this map.
+        /// </summary>
         private readonly IndexRemapper blocksMapper = new();
         #endregion
 
@@ -46,12 +53,10 @@ namespace ContentUnpacker.Tilemaps
         /// The height of the map in tiles.
         /// </summary>
         public byte Height { get; }
-
-        public ushort HighestIndex { get; private set; }
         #endregion
 
         #region Constructors
-        private TilemapData(BinaryReader reader, byte width, byte height, string mapName, string tilesetName, int dataStart)
+        private TilemapLoader(BinaryReader reader, byte width, byte height, string mapName, string tilesetName, int dataStart)
         {
             this.reader = reader;
             MapName = mapName;
@@ -73,14 +78,13 @@ namespace ContentUnpacker.Tilemaps
             // Go over every single detail tile index.
             for (int i = 0; i < Width * Height; i++)
             {
-                // Read the index and set the highest, if it is higher than the current, and add it to the mapper.
+                // Read the index and add it to the mapper.
                 ushort originalIndex = reader.ReadUInt16();
-                HighestIndex = Math.Max(HighestIndex, originalIndex);
                 blocksMapper.TryAdd(originalIndex);
             }
         }
 
-        public void AddAllUsedTilesToTilePalette(FactionTilePalette factionTilePalette, TilemapPalette? mapPalette)
+        public void AddAllUsedTilesToTilePalette(FactionTilePalette factionTilePalette, TilemapBlockPalette? mapPalette)
         {
             // Add each used block to the tile palette.
             foreach (ushort usedOriginalBlockIndex in blocksMapper)
@@ -92,7 +96,7 @@ namespace ContentUnpacker.Tilemaps
         #endregion
 
         #region Save Functions
-        public void Save(string outputDirectoryPath, FactionTilePalette factionTilePalette, TilemapPalette? mapPalette)
+        public void Save(string outputDirectoryPath, FactionTilePalette factionTilePalette, TilemapBlockPalette? mapPalette)
         {
             // Create the writer.
             Directory.CreateDirectory(outputDirectoryPath);
@@ -160,12 +164,17 @@ namespace ContentUnpacker.Tilemaps
                 writer.Write(tiles[i].RawData);
         }
         #endregion
-
+        
         #region Load Functions
-        public static TilemapData Load(string mapName)
+        /// <summary>
+        /// Loads the tilemap file with the given name.
+        /// </summary>
+        /// <param name="mapName"> The name of the map to load. </param>
+        /// <returns> The loaded map data. </returns>
+        public static TilemapLoader Load(string mapName)
         {
             // Load the file.
-            string filePath = Path.ChangeExtension(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, MapsDirectoryName, mapName), fileExtension);
+            string filePath = Path.ChangeExtension(Path.Combine(InputRootDirectory, mapName), ContentFileUtil.TilemapExtension);
             FileStream file = File.OpenRead(filePath);
             BinaryReader reader = new(file);
 
@@ -174,35 +183,15 @@ namespace ContentUnpacker.Tilemaps
             byte width = reader.ReadByte();
             byte height = reader.ReadByte();
             reader.BaseStream.Position += 2;
-            string tilesetName = readTilesetName(reader);
+            string tilesetName = reader.ReadNullTerminatedString();
 
             // Create and return the data.
             return new(reader, width, height, mapName, tilesetName, 0x2B);
         }
-
-        private static string readTilesetName(BinaryReader reader)
-        {
-            // Read the tileset name.
-            bool stringContinue = true;
-            StringBuilder tilesetNameStringBuilder = new();
-            while (stringContinue)
-            {
-                char currentChar = reader.ReadChar();
-                stringContinue = currentChar != 0;
-                if (stringContinue)
-                    tilesetNameStringBuilder.Append(currentChar);
-            }
-
-            // Return the tileset name.
-            return tilesetNameStringBuilder.ToString();
-        }
         #endregion
 
         #region Disposal Functions
-        public void Dispose()
-        {
-            reader.Dispose();
-        }
+        public void Dispose() => reader.Dispose();
         #endregion
     }
 }

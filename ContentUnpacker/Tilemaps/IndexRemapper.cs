@@ -18,8 +18,18 @@ namespace ContentUnpacker.Tilemaps
         #endregion
 
         #region Get Functions
+        /// <summary>
+        /// Gets the remapped index of a block from the given original index.
+        /// </summary>
+        /// <param name="originalIndex"> The original index to map. </param>
+        /// <returns> The remapped index. </returns>
         public ushort GetRemappedBlockIndex(ushort originalIndex) => originalToRemapped[originalIndex];
 
+        /// <summary>
+        /// Gets the original index of a block from the given remapped index.
+        /// </summary>
+        /// <param name="remappedIndex"> The remapped index to unmap. </param>
+        /// <returns> The original index. </returns>
         public ushort GetOriginalBlockIndex(ushort remappedIndex) => remappedToOriginal[remappedIndex];
         #endregion
 

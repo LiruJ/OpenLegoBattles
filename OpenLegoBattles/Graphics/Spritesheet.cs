@@ -46,16 +46,16 @@ namespace OpenLegoBattles.Graphics
         /// <param name="tileX"> The x position of the tile. </param>
         /// <param name="tileY"> The y position of the tile. </param>
         /// <returns> The source rectangle containing the sprite at the given <paramref name="tileX"/> and <paramref name="tileY"/> on the spritesheet. </returns>
-        public Rectangle CalculateSourceRectangle(int tileX, int tileY) => new Rectangle(new Point(tileX, tileY) * TileSize, TileSize);
+        public Rectangle CalculateSourceRectangle(int tileX, int tileY) => new(new Point(tileX, tileY) * TileSize, TileSize);
 
         /// <summary> Calculates and returns the source rectangle containing the sprite at the given 1-dimensional <paramref name="index"/>. </summary>
         /// <param name="index"> The 1-dimensional index of the sprite. </param>
         /// <returns> The source rectangle containing the sprite at the given 1-dimensional <paramref name="index"/>. </returns>
-        public Rectangle CalculateSourceRectangle(int index) => new Rectangle(CalculateXYFromIndex(index) * TileSize, TileSize);
+        public Rectangle CalculateSourceRectangle(int index) => new(CalculateXYFromIndex(index) * TileSize, TileSize);
 
         public Point CalculateXYFromIndex(int index) => CalculateXYFromIndex(index, Width);
 
-        public static Point CalculateXYFromIndex(int index, int width) => new Point(index % width, index / width);
+        public static Point CalculateXYFromIndex(int index, int width) => new(index % width, index / width);
 
         public int CalculateIndexFromXY(int x, int y) => CalculateIndexFromXY(x, y, Width);
 
