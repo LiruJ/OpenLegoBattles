@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Main>
+	<!--The stumps, used as the default rule-->
+	<DefaultRule OriginalIndices="175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189"/>
+
+	<Rules>
+		<!--Top left, top right, bottom right, and bottom left corners, in that order-->
+		<Rule OriginalIndices="0" FullMask="Bottom, BottomRight, Right" EmptyMask="Left, Top"/>
+		<Rule OriginalIndices="2" FullMask="Bottom, BottomLeft, Left" EmptyMask="Right, Top"/>
+		<Rule OriginalIndices="10" FullMask="Top, TopRight, Right" EmptyMask="Bottom, Left"/>
+		<Rule OriginalIndices="12" FullMask="Top, TopLeft, Left" EmptyMask="Bottom, Right"/>
+	
+		<!--Top, right, bottom, left edges, in that order-->
+		<Rule OriginalIndices="1" FullMask="Left, BottomLeft, Bottom, BottomRight, Right" EmptyMask="Top">
+			<Masks FullMask="Left, BottomLeft, Bottom, BottomRight, Right" EmptyMask="TopRight, TopLeft"/>
+		</Rule>
+		<Rule OriginalIndices="7" FullMask="Top, TopLeft, Left, BottomLeft, Bottom" EmptyMask="Right">
+			<Masks FullMask="Top, TopLeft, Left, BottomLeft, Bottom" EmptyMask="TopRight, BottomRight"/>
+		</Rule>
+		<Rule OriginalIndices="11" FullMask="Left, TopLeft, Top, TopRight, Right" EmptyMask="Bottom">
+			<Masks FullMask="Left, TopLeft, Top, TopRight, Right" EmptyMask="BottomLeft, BottomRight"/>
+		</Rule>
+		<Rule OriginalIndices="5" FullMask="Top, TopRight, Right, BottomRight, Bottom" EmptyMask="Left">
+			<Masks FullMask="Top, TopRight, Right, BottomRight, Bottom" EmptyMask="TopLeft, BottomLeft"/>
+		</Rule>
+
+		<!--Top left, top right, bottom right, and bottom left inverted corners, in that order-->
+		<Rule OriginalIndices="21" FullMask="Bottom, BottomLeft, Left, TopLeft, Top, TopRight, Right" EmptyMask="BottomRight"/>
+		<Rule OriginalIndices="20" FullMask="Left, TopLeft, Top, TopRight, Right, BottomRight, Bottom" EmptyMask="BottomLeft"/>
+		<Rule OriginalIndices="16" FullMask="Top, TopRight, Right, BottomRight, Bottom, BottomLeft, Left" EmptyMask="TopLeft"/>
+		<Rule OriginalIndices="15" FullMask="Right, BottomRight, Bottom, BottomLeft, Left, TopLeft, Top" EmptyMask="TopRight"/>
+		
+		<!--The diagonal corner trees-->
+		<Rule OriginalIndices="17" FullMask="Right, Bottom, BottomLeft, Left, Top, TopRight" EmptyMask="TopLeft, BottomRight"/>
+		<Rule OriginalIndices="22" FullMask="Right, BottomRight, Bottom, Left, TopLeft, Top" EmptyMask="TopRight, BottomLeft"/>
+
+		<!--The centre tree-->
+		<Rule OriginalIndices="6" FullMask="Top, TopRight, Right, BottomRight, Bottom, BottomLeft, Left, TopLeft" EmptyMask="None"/>
+	</Rules>
+</Main>

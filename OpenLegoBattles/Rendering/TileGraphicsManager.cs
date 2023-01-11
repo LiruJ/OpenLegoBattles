@@ -61,6 +61,20 @@ namespace OpenLegoBattles.Rendering
 
         public Rectangle GetTerrainBlockSource(ushort index) => Tilesheet.CalculateSourceRectangle(GetTerrainBlockIndex(index));
 
+        public DirectionMask CreateTreeMaskTemp(TilemapData tilemap, Func<int, int, bool> stumpFunc, int x, int y)
+        {
+            DirectionMask mask = 0;
+            if (tilemap.HasTreeAtPosition(x, y - 1)     && stumpFunc(x, y - 1)) mask |= DirectionMask.Top;
+            if (tilemap.HasTreeAtPosition(x + 1, y - 1) && stumpFunc(x + 1, y - 1)) mask |= DirectionMask.TopRight;
+            if (tilemap.HasTreeAtPosition(x + 1, y)     && stumpFunc(x + 1, y)) mask |= DirectionMask.Right;
+            if (tilemap.HasTreeAtPosition(x + 1, y + 1) && stumpFunc(x + 1, y + 1)) mask |= DirectionMask.BottomRight;
+            if (tilemap.HasTreeAtPosition(x, y + 1)     && stumpFunc(x, y + 1)) mask |= DirectionMask.Bottom;
+            if (tilemap.HasTreeAtPosition(x - 1, y + 1) && stumpFunc(x - 1, y + 1)) mask |= DirectionMask.BottomLeft;
+            if (tilemap.HasTreeAtPosition(x - 1, y)     && stumpFunc(x - 1, y)) mask |= DirectionMask.Left;
+            if (tilemap.HasTreeAtPosition(x - 1, y - 1) && stumpFunc(x - 1, y - 1)) mask |= DirectionMask.TopLeft;
+            return mask;
+        }
+
         public DirectionMask CreateTreeMask(TilemapData tilemap, int x, int y)
         {
             DirectionMask mask = 0;

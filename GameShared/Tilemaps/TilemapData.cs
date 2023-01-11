@@ -10,7 +10,11 @@ namespace OpenLegoBattles.TilemapSystem
     public class TilemapData
     {
         #region Operators
-        public TileData this[int x, int y] => mapData[x, y];
+        public TileData this[int x, int y]
+        {
+            get => mapData[x, y];
+            set => mapData[x, y] = value;
+        }
         #endregion
 
         #region Fields
@@ -68,9 +72,13 @@ namespace OpenLegoBattles.TilemapSystem
         /// <param name="x"> The x position. </param>
         /// <param name="y"> The y position. </param>
         /// <returns> <c>true</c> if the given position has a tree; otherwise <c>false</c>. </returns>
-        public bool HasTreeAtPosition(int x, int y) => IsPositionInRange(x, y) && mapData[x, y].HasTree;
+        public bool HasTreeAtPosition(int x, int y) => !IsPositionInRange(x, y) || mapData[x, y].HasTree;
 
-        public bool IsPositionInRange(int x, int y) => x >= 0 || x < Width || y >= 0 || y < Height;
+        public bool IsPositionInRange(int x, int y) => x >= 0 && x < Width && y >= 0 && y < Height;
+        #endregion
+
+        #region Set Functions
+        public void SetTreeAtPosition(int x, int y, bool hasTree) => mapData[x, y].HasTree = hasTree;
         #endregion
 
         #region Load Functions

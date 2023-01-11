@@ -11,8 +11,6 @@ namespace OpenLegoBattles.Rendering
     {
         #region Fields
         private readonly Dictionary<DirectionMask, ConnectionRule> rulesByPossibleHashes = new();
-
-        private readonly ConnectionRule defaultRule;
         #endregion
 
         #region Properties
@@ -30,6 +28,8 @@ namespace OpenLegoBattles.Rendering
         /// The offset that this rule set uses on the main block palette. This is applied to the internal index of a block within a rule to obtain the index of the block in the main palette.
         /// </summary>
         public ushort BlockPaletteOffset { get; }
+
+        public ConnectionRule DefaultRule { get; }
         #endregion
 
         #region Constructors
@@ -37,7 +37,7 @@ namespace OpenLegoBattles.Rendering
         {
             this.BlockPalette = blockPalette;
             BlockPaletteOffset = blockPaletteOffset;
-            this.defaultRule = defaultRule;
+            this.DefaultRule = defaultRule;
 
             // Register the rules.
             registerAllRuleHashes(rules);
@@ -46,7 +46,7 @@ namespace OpenLegoBattles.Rendering
 
         #region Tile Functions
         public ushort GetBlockForTileHash(DirectionMask hash) 
-            => (ushort)(BlockPaletteOffset + (rulesByPossibleHashes.TryGetValue(hash, out ConnectionRule rule) ? rule : defaultRule).FirstIndex);
+            => (ushort)(BlockPaletteOffset + (rulesByPossibleHashes.TryGetValue(hash, out ConnectionRule rule) ? rule : DefaultRule).FirstIndex);
         #endregion
 
         #region Load Functions
@@ -74,8 +74,9 @@ namespace OpenLegoBattles.Rendering
         {
             foreach (ConnectionRule rule in rules)
                 foreach (DirectionMask possibleHash in rule.AllPossibleTileMasks())
-                    if (!rulesByPossibleHashes.TryAdd(possibleHash, rule))
-                        throw new Exception("Hash collision between two separate rules.");
+                    //if (!
+                        rulesByPossibleHashes.TryAdd(possibleHash, rule);
+                        //throw new Exception("Hash collision between two separate rules.");
         }
         #endregion
     }

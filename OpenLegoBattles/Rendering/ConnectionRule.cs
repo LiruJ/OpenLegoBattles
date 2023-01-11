@@ -3,6 +3,7 @@ using GameShared.DataTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.DirectoryServices;
 
 namespace OpenLegoBattles.Rendering
 {
@@ -32,39 +33,32 @@ namespace OpenLegoBattles.Rendering
         /// </summary>
         public bool HasMultipleIndices => TileIndices.Count > 1;
 
-        /// <summary>
-        /// The mask of adjacent tiles that can be full. If both this and <see cref="TileEmptyMask"/> share a set tile, it means that tile can be either full or empty.
-        /// </summary>
-        public DirectionMask TileFullMask { get; }
-
-        /// <summary>
-        /// The mask of adjacent tiles that can be empty. If both this and <see cref="TileFullMask"/> share a set tile, it means that tile can be either full or empty.
-        /// </summary>
-        public DirectionMask TileEmptyMask { get; }
+        public IReadOnlyList<ValueTuple<DirectionMask, DirectionMask>> Masks { get; }
         #endregion
 
         #region Constructors
-        public ConnectionRule(DirectionMask tileFullMask, DirectionMask tileEmptyMask, IReadOnlyList<ushort> tileIndices)
+        public ConnectionRule(IReadOnlyList<ushort> tileIndices, IReadOnlyList<(DirectionMask, DirectionMask)> masks)
         {
-            TileFullMask = tileFullMask;
-            TileEmptyMask = tileEmptyMask;
             TileIndices = tileIndices;
+            Masks = masks;
         }
-
-        public ConnectionRule(DirectionMask tileFullMask, DirectionMask tileEmptyMask, ushort tileIndex) : this(tileFullMask, tileEmptyMask, new List<ushort>() { tileIndex }) { }
         #endregion
 
         #region Rule Functions
         public IEnumerable<DirectionMask> AllPossibleTileMasks()
         {
-            // Calculate the mask types for each direction.
-            tileMaskType[] directionMaskTypes = new tileMaskType[8];
-            for (byte i = 0; i < 8; i++)
-                directionMaskTypes[i] = calculateMaskTypeForDirection(new Direction(i));
+            // Calculate the masks for every mask in the rule.
+            foreach ((DirectionMask full, DirectionMask empty) masks in Masks)
+            {
+                // Calculate the mask types for each direction.
+                tileMaskType[] directionMaskTypes = new tileMaskType[8];
+                for (byte i = 0; i < 8; i++)
+                    directionMaskTypes[i] = calculateMaskTypeForDirection(new Direction(i), masks);
 
-            // Go over all possiblities from the first bit.
-            foreach (DirectionMask possiblity in allPossibleTileMasks(directionMaskTypes, 0, DirectionMask.None))
-                yield return possiblity;
+                // Go over all possiblities from the first bit.
+                foreach (DirectionMask possiblity in allPossibleTileMasks(directionMaskTypes, 0, DirectionMask.None))
+                    yield return possiblity;
+            }
         }
 
         private IEnumerable<DirectionMask> allPossibleTileMasks(tileMaskType[] directionMaskTypes, byte index, DirectionMask startMask)
@@ -88,11 +82,11 @@ namespace OpenLegoBattles.Rendering
             yield return startMask;
         }
 
-        private tileMaskType calculateMaskTypeForDirection(Direction direction)
+        private static tileMaskType calculateMaskTypeForDirection(Direction direction, (DirectionMask full, DirectionMask empty) masks)
         {
             // Calculate the mask type based on the state requirements of the tile.
-            bool requiresTile = direction.IsMaskDirectionSet(TileFullMask);
-            bool requiresEmpty = direction.IsMaskDirectionSet(TileEmptyMask);
+            bool requiresTile = direction.IsMaskDirectionSet(masks.full);
+            bool requiresEmpty = direction.IsMaskDirectionSet(masks.empty);
             if (requiresTile && !requiresEmpty) return tileMaskType.MustBeFull;
             else if (!requiresTile && requiresEmpty) return tileMaskType.MustBeEmpty;
             else return tileMaskType.EitherFullOrEmpty;
@@ -106,16 +100,15 @@ namespace OpenLegoBattles.Rendering
             List<ushort> indices = readIndices(reader);
 
             // Read the masks and return the created rule.
-            DirectionMask fullMask = (DirectionMask)reader.ReadByte();
-            DirectionMask emptyMask = (DirectionMask)reader.ReadByte();
-            return new(fullMask, emptyMask, indices);
+            List<ValueTuple<DirectionMask, DirectionMask>> masks = readMasks(reader);
+            return new(indices, masks);
         }
 
         public static ConnectionRule LoadDefaultFromStream(BinaryReader reader)
         {
             // Read the indices and return the created default rule.
             List<ushort> indices = readIndices(reader);
-            return new(DirectionMask.None, DirectionMask.None, indices);
+            return new(indices, new List<ValueTuple<DirectionMask, DirectionMask>>());
         }
 
         private static List<ushort> readIndices(BinaryReader reader)
@@ -125,6 +118,15 @@ namespace OpenLegoBattles.Rendering
             for (int i = 0; i < indexCount; i++)
                 indices.Add(reader.ReadUInt16());
             return indices;
+        }
+
+        private static List<ValueTuple<DirectionMask, DirectionMask>> readMasks(BinaryReader reader)
+        {
+            byte masksCount = reader.ReadByte();
+            List<ValueTuple<DirectionMask, DirectionMask>> masks = new(masksCount);
+            for (int i = 0; i < masksCount; i++)
+                masks.Add(new((DirectionMask)reader.ReadByte(), (DirectionMask)reader.ReadByte()));
+            return masks;
         }
         #endregion
     }

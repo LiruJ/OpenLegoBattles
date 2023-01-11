@@ -70,12 +70,12 @@ namespace ContentUnpacker
             ConcurrentQueue<BinaryReader> pooledBinaryReaders = new();
 
             // Create the unpacked files directory.
-            if (Directory.Exists(WorkingFolderName))
-                Directory.Delete(WorkingFolderName, true);
-            Directory.CreateDirectory(WorkingFolderName);
+            //if (Directory.Exists(WorkingFolderName))
+            //    Directory.Delete(WorkingFolderName, true);
+            //Directory.CreateDirectory(WorkingFolderName);
 
             // Begin each stage in sequence.
-            await DecompressionStage.BeginAsync(options, fileSystem, mainNode);
+            //await DecompressionStage.BeginAsync(options, fileSystem, mainNode);
             await TilemapOptimiserStage.BeginAsync(options);
 
 #if RELEASE

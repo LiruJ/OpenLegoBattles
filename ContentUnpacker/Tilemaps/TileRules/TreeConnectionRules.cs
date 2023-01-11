@@ -1,40 +1,68 @@
 ﻿using ContentUnpacker.Spritesheets;
-using GlobalShared.DataTypes;
 using GlobalShared.Tilemaps;
 using System.Drawing;
+using System.Xml;
 
 namespace ContentUnpacker.Tilemaps.TileRules
 {
     internal class TreeConnectionRules
     {
-        #region Constants
-        /// <summary>
-        /// The index of the first stump in the <see cref="treeTilePaletteIndices"/> collection.
-        /// </summary>
-        private const byte stumpStarts = 16;
+        #region Fields
+        private static readonly ConnectionRuleSaver defaultRule;
+        
+        private static readonly IReadOnlyList<ConnectionRuleSaver> connectionRules;
 
         /// <summary>
         /// The indices of the tree tiles within the original faction block palette.
         /// </summary>
-        private static readonly IReadOnlyList<ushort> treeTilePaletteIndices = new List<ushort>()
-        {
-            0, 1, 2,
-            5, 6, 7,
-            10, 11, 12,
-            15, 16, 17,
-            20, 21, 22,
-            175, 176, 177, 178, 179,
-            180, 181, 182, 183, 184,
-            185, 186, 187, 188, 189,
-        };
+        private static readonly IReadOnlyList<ushort> treeTilePaletteIndices;
+        #endregion
 
+        #region Properties
         /// <summary>
         /// The number of sub-tiles used by the trees. Note that every tree tile has a mask applied to it and as such is unique, so the number of sub-tiles is simply the number of blocks times <c>6</c>.
         /// </summary>
         public static ushort UsedSubIndicesCount => (ushort)(treeTilePaletteIndices.Count * 6);
         #endregion
 
-        #region Rule Functions
+        #region Constructors
+        static TreeConnectionRules()
+        {
+            // Load the xml file.
+            XmlDocument treeRulesFile = new();
+            treeRulesFile.Load(Path.Combine("Masks", "TreeTileRules.xml"));
+            List<ushort> treeTilePaletteIndices = new();
+            List<ConnectionRuleSaver> connectionRules = new();
+            XmlNode mainNode = treeRulesFile.LastChild ?? throw new Exception("Tree rules file missing main node");
+
+            // Load the default rules.
+            XmlNode? defaultRuleNode = mainNode.SelectSingleNode("DefaultRule") ?? throw new Exception("Trees missing default rule node.");
+            defaultRule = ConnectionRuleSaver.LoadFromXmlNode(defaultRuleNode);
+            treeTilePaletteIndices.AddRange(defaultRule.OriginalIndices);
+
+            // Load each rule.
+            XmlNode rulesNode = mainNode.SelectSingleNode("Rules") ?? throw new Exception("Trees missing rules node.");
+            foreach (XmlNode? ruleNode in rulesNode.ChildNodes)
+            {
+                // Ensure the node is valid.
+                if (ruleNode == null || ruleNode.NodeType != XmlNodeType.Element)
+                    continue;
+
+                // Load the rule.
+                ConnectionRuleSaver connection = ConnectionRuleSaver.LoadFromXmlNode(ruleNode);
+
+                connectionRules.Add(connection);
+                treeTilePaletteIndices.AddRange(connection.OriginalIndices);
+            }
+
+            // Sort and save the indices.
+            treeTilePaletteIndices.Sort();
+            TreeConnectionRules.treeTilePaletteIndices = treeTilePaletteIndices;
+            TreeConnectionRules.connectionRules = connectionRules;
+        }
+        #endregion
+        
+        #region Rule Functions 
         public static void SaveTreeRules(string outputDirectory)
         {
             // Create the writer.
@@ -43,24 +71,22 @@ namespace ContentUnpacker.Tilemaps.TileRules
             FileStream outputFile = File.Create(filePath);
             using BinaryWriter treeWriter = new(outputFile);
 
-            // Save the palette first.
+            // Create the mapper between original and new tree indices.
+            IndexRemapper blockIndicesMapper = new();
+            blockIndicesMapper.AddCollection(treeTilePaletteIndices);
+
+            // Save the palette first. Note that trees are each unique and thus the palette is contiguous, so the indices can be saved with a simple for loop.
             treeWriter.Write((ushort)treeTilePaletteIndices.Count);
             for (ushort i = 0; i < treeTilePaletteIndices.Count * 6; i++)
                 treeWriter.Write(i);
 
             // Write the default tile.
-            // TODO: This should use the stumps eventually.
-            byte stumpCount = (byte)(treeTilePaletteIndices.Count - stumpStarts);
-            ushort[] defaultIndices = new ushort[stumpCount];
-            for (ushort blockIndex = stumpStarts, i = 0; blockIndex < treeTilePaletteIndices.Count; blockIndex++, i++)
-                defaultIndices[i] = blockIndex;
-            TileRuleSaver.SaveIndexList(treeWriter, stumpCount, defaultIndices);
+            defaultRule.SaveToFile(treeWriter, blockIndicesMapper);
 
             // Write the actual rules that define which tiles are used where.
-            treeWriter.Write((byte)3);
-            TileRuleSaver.SaveConnectionRule(treeWriter, 4, DirectionMask.Top | DirectionMask.Right | DirectionMask.Bottom | DirectionMask.Left, DirectionMask.None);
-            TileRuleSaver.SaveConnectionRule(treeWriter, 0, DirectionMask.Bottom | DirectionMask.BottomRight | DirectionMask.Right, DirectionMask.TopLeft | DirectionMask.Left | DirectionMask.Top);
-            TileRuleSaver.SaveConnectionRule(treeWriter, 6, DirectionMask.Top | DirectionMask.TopRight | DirectionMask.Right, DirectionMask.Bottom | DirectionMask.BottomLeft | DirectionMask.Left);
+            treeWriter.Write((byte)connectionRules.Count);
+            foreach (ConnectionRuleSaver rule in connectionRules)
+                rule.SaveToFile(treeWriter, blockIndicesMapper);
         }
         #endregion
 
