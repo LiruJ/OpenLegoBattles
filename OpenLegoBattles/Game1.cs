@@ -74,7 +74,7 @@ namespace OpenLegoBattles
             }
 
             // Load the map.
-            tilemap = romContentManager.Load<TilemapData>("ck1_3");
+            tilemap = romContentManager.Load<TilemapData>("mh1_3");
             tempTreeMap = new ushort[tilemap.Width, tilemap.Height];
 
 
@@ -84,38 +84,6 @@ namespace OpenLegoBattles
             graphics.PreferredBackBufferWidth = tileGraphicsManager.Tilesheet.TileSize.X * tilemap.Width;
             graphics.PreferredBackBufferHeight = tileGraphicsManager.Tilesheet.TileSize.Y * tilemap.Height;
             graphics.ApplyChanges();
-
-
-            //calculateTrees();
-        }
-
-        private void calculateTrees()
-        {
-            for (int x = 0; x < tilemap.Width; x++)
-                for (int y = 0; y < tilemap.Height; y++)
-                    tempTreeMap[x, y] = ushort.MaxValue;
-            for (int x = 0; x < tilemap.Width; x++)
-                for (int y = 0; y < tilemap.Height; y++)
-                    if (tilemap.HasTreeAtPosition(x, y))
-                    {
-                        DirectionMask mask = tileGraphicsManager.CreateTreeMask(tilemap, x, y);
-                        ushort index = tileGraphicsManager.TreeRuleSet.GetBlockForTileHash(mask);
-                        if (index == tileGraphicsManager.TreeRuleSet.DefaultRule.FirstIndex) tempTreeMap[x, y] = index;
-                        else tempTreeMap[x, y] = 0;
-                    }
-            Func<int, int, bool> stumpFunc = (x, y) =>
-            {
-                return !tilemap.IsPositionInRange(x, y) || tempTreeMap[x, y] != tileGraphicsManager.TreeRuleSet.DefaultRule.FirstIndex;
-            };
-            for (int x = 0; x < tilemap.Width; x++)
-                for (int y = 0; y < tilemap.Height; y++)
-                    if (tempTreeMap[x, y] == 0)
-                    {
-                        DirectionMask mask = tileGraphicsManager.CreateTreeMaskTemp(tilemap, stumpFunc, x, y);
-                        ushort index = tileGraphicsManager.TreeRuleSet.GetBlockForTileHash(mask);
-                        tempTreeMap[x, y] = index;
-
-                    }
         }
 
         protected override void Update(GameTime gameTime)
@@ -136,7 +104,6 @@ namespace OpenLegoBattles
                     treePlacement = !tilemap.HasTreeAtPosition(mouseTileX, mouseTileY);
 
                 tilemap.SetTreeAtPosition(mouseTileX, mouseTileY, treePlacement);
-                //calculateTrees();
             }
 
             previousMouseState = currentMouseState;

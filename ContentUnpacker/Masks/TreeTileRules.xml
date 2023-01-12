@@ -5,10 +5,26 @@
 
 	<Rules>
 		<!--Top left, top right, bottom right, and bottom left corners, in that order-->
-		<Rule OriginalIndices="0" FullMask="Bottom, BottomRight, Right" EmptyMask="Left, Top"/>
-		<Rule OriginalIndices="2" FullMask="Bottom, BottomLeft, Left" EmptyMask="Right, Top"/>
-		<Rule OriginalIndices="10" FullMask="Top, TopRight, Right" EmptyMask="Bottom, Left"/>
-		<Rule OriginalIndices="12" FullMask="Top, TopLeft, Left" EmptyMask="Bottom, Right"/>
+		<Rule OriginalIndices="0" FullMask="Bottom, BottomRight, Right" EmptyMask="Left, Top">
+			<Masks FullMask="Bottom, BottomRight, Right" EmptyMask="Top, BottomLeft"/>
+			<Masks FullMask="Bottom, BottomRight, Right" EmptyMask="Left, TopRight"/>
+			<Masks FullMask="Bottom, BottomRight, Right" EmptyMask="TopLeft, TopRight, BottomLeft"/>
+		</Rule>
+		<Rule OriginalIndices="2" FullMask="Bottom, BottomLeft, Left" EmptyMask="Right, Top">
+			<Masks FullMask="Bottom, BottomLeft, Left" EmptyMask="Right, TopLeft"/>
+			<Masks FullMask="Bottom, BottomLeft, Left" EmptyMask="Top, BottomRight"/>
+			<Masks FullMask="Bottom, BottomLeft, Left" EmptyMask="TopRight, TopLeft, BottomRight"/>
+		</Rule>
+		<Rule OriginalIndices="12" FullMask="Top, TopLeft, Left" EmptyMask="Bottom, Right">
+			<Masks FullMask="Top, TopLeft, Left" EmptyMask="Bottom, TopRight"/>
+			<Masks FullMask="Top, TopLeft, Left" EmptyMask="Right, BottomLeft"/>
+			<Masks FullMask="Top, TopLeft, Left" EmptyMask="BottomRight, TopRight, BottomLeft"/>
+		</Rule>
+		<Rule OriginalIndices="10" FullMask="Top, TopRight, Right" EmptyMask="Bottom, Left">
+			<Masks FullMask="Top, TopRight, Right" EmptyMask="Bottom, TopLeft"/>
+			<Masks FullMask="Top, TopRight, Right" EmptyMask="Left, BottomRight"/>
+			<Masks FullMask="Top, TopRight, Right" EmptyMask="BottomLeft, TopLeft, BottomRight"/>
+		</Rule>
 	
 		<!--Top, right, bottom, left edges, in that order-->
 		<Rule OriginalIndices="1" FullMask="Left, BottomLeft, Bottom, BottomRight, Right" EmptyMask="Top">
