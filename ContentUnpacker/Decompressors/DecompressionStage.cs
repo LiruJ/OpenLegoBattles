@@ -72,7 +72,7 @@ namespace ContentUnpacker.Decompressors
         private static void reportProgress(string filename, progressTracker progressTracker)
         {
             progressTracker.DoneCount++;
-            Console.WriteLine($"{progressTracker.ProgressPercentage:P0}\t- {filename}");
+            Console.WriteLine($"{progressTracker.ProgressPercentage:P0} - {filename}");
         }
         #endregion
 
