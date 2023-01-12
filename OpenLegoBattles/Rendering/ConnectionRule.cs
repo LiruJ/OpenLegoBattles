@@ -1,9 +1,8 @@
-﻿using GlobalShared.DataTypes;
-using GameShared.DataTypes;
+﻿using GameShared.DataTypes;
+using GlobalShared.DataTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.DirectoryServices;
 
 namespace OpenLegoBattles.Rendering
 {

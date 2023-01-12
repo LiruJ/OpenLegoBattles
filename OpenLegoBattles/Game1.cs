@@ -1,5 +1,4 @@
-﻿using GlobalShared.DataTypes;
-using GuiCookie;
+﻿using GuiCookie;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -9,8 +8,6 @@ using OpenLegoBattles.RomContent;
 using OpenLegoBattles.TilemapSystem;
 using System;
 using System.Reflection;
-using System.Runtime;
-using System.Windows.Forms;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 
@@ -91,28 +88,6 @@ namespace OpenLegoBattles
             graphics.PreferredBackBufferWidth = 1280;
             graphics.PreferredBackBufferHeight = 720;
             graphics.ApplyChanges();
-
-            // Unpack the rom file.
-            //if (!romContentManager.HasUnpacked)
-            //{
-            //    OpenFileDialog fileDialog = new()
-            //    {
-            //        Filter = "Rom Files (*.nds)|*.nds",
-            //        Title = "Choose Lego Battles ROM file"
-            //    };
-
-            //    while (fileDialog.ShowDialog() != DialogResult.OK)
-            //    {
-
-            //        DialogResult messageBoxResult = MessageBox.Show("Rom file is required to play", "Rom is required", MessageBoxButtons.OK);
-            //        if (messageBoxResult == DialogResult.Abort)
-            //        {
-            //            Exit();
-            //            return;
-            //        }
-            //    }
-            //    romContentManager.UnpackRomAsync(fileDialog.FileName).Wait();
-            //}
 
             //// Load the map.
             //tilemap = romContentManager.Load<TilemapData>("mp16");
