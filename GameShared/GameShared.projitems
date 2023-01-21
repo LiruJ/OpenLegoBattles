@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)DataTypes\Direction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Scenes\BattleScene.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TilemapData.cs" />
   </ItemGroup>
 </Project>

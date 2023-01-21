@@ -23,9 +23,11 @@ namespace OpenLegoBattles.GameStates
         #endregion
 
         #region Constants
-        private const double introFadeTimeSeconds = 1;
+        private const double introFadeTimeSeconds = 2;
 
-        private const double introTotalTimeSeconds = introFadeTimeSeconds + 3;
+        private const double introLogoTimeSeconds = 2;
+
+        private const double introTotalTimeSeconds = introFadeTimeSeconds + introLogoTimeSeconds;
         #endregion
 
         #region Dependencies
@@ -33,15 +35,17 @@ namespace OpenLegoBattles.GameStates
         private readonly ContentManager contentManager;
         private readonly GraphicsDevice graphicsDevice;
         private readonly RomContentManager romContentManager;
+        private readonly GameStateManager gameStateManager;
         #endregion
 
         #region Fields
-
         private readonly SpriteBatch spriteBatch;
 
         private introState currentState = introState.Started;
 
         private double currentIntroTime = 0;
+
+        private Texture2D logo;
 
         private RomUnpacker romUnpacker;
 
@@ -59,16 +63,21 @@ namespace OpenLegoBattles.GameStates
         #endregion
 
         #region Constructors
-        public IntroState(GameWindow window, ContentManager contentManager, GraphicsDevice graphicsDevice, RomContentManager romContentManager)
+        public IntroState(GameWindow window, ContentManager contentManager, GraphicsDevice graphicsDevice, RomContentManager romContentManager, GameStateManager gameStateManager)
         {
             // Set dependencies.
             this.window = window;
             this.contentManager = contentManager;
             this.graphicsDevice = graphicsDevice;
             this.romContentManager = romContentManager;
+            this.gameStateManager = gameStateManager;
 
             // Create the spritebatch.
             spriteBatch = new(graphicsDevice);
+
+            // Load the logo.
+            unpackerFont = contentManager.Load<SpriteFont>("Fonts/UnpackerFont");
+            logo = contentManager.Load<Texture2D>("LegoLogo");
 
             // Handle the state based on if the rom has already been unpacked.
             if (RomUnpacker.FindIfHasUnpacked(romContentManager.BaseGameDirectory)) currentState = introState.PlayingIntro;
@@ -85,7 +94,7 @@ namespace OpenLegoBattles.GameStates
 
             // Load the font and set the text.
             currentText = "Please drop the Lego Battles nds file onto the window";
-            unpackerFont = contentManager.Load<SpriteFont>("Fonts/UnpackerFont");
+
 
             // Create the unpacker.
             romUnpacker = new(romContentManager.BaseGameDirectory);
@@ -126,8 +135,10 @@ namespace OpenLegoBattles.GameStates
                     currentIntroTime += gameTime.ElapsedGameTime.TotalSeconds;
                     if (currentIntroTime >= introTotalTimeSeconds)
                     {
-
-
+                        // Start the main menu state.
+                        // TODO: put main menu here.
+                        gameStateManager.CreateAndAddGameState<FogTestState>();
+                        gameStateManager.Remove(this);
                     }
                     break;
                 // If the rom file is currently being unpacked, handle updating the text and checking if it is done.
@@ -152,12 +163,25 @@ namespace OpenLegoBattles.GameStates
         #region Draw Functions
         public void Draw(GameTime gameTime)
         {
-            spriteBatch.Begin();
+            graphicsDevice.Clear(Color.Black);
+
+            spriteBatch.Begin(blendState: BlendState.NonPremultiplied, samplerState: SamplerState.LinearClamp);
 
             // If the intro is playing, draw it.
             if (currentState == introState.PlayingIntro)
             {
-                // TODO: Draw the logo and fade it out.
+                // Calculate the fade amount.
+                float fadeAlpha = 1 - (float)Math.Max((currentIntroTime - introLogoTimeSeconds) / introFadeTimeSeconds, 0);
+                
+                // Draw the logo.
+                Vector2 logoPosition = (window.ClientBounds.Size.ToVector2() / 2) - (logo.Bounds.Size.ToVector2() / 2);
+                spriteBatch.Draw(logo, logoPosition, new Color(Color.White, fadeAlpha));
+                
+                // Draw the logo text.
+                string logoText = "Lovebirb.com";
+                Vector2 textSize = unpackerFont.MeasureString(logoText);
+                Vector2 textPosition = new Vector2(window.ClientBounds.Width / 2, window.ClientBounds.Height - (textSize.Y * 2)) - (textSize / 2.0f);
+                spriteBatch.DrawString(unpackerFont, logoText, textPosition, new Color(255, 109, 0, (int)(fadeAlpha * byte.MaxValue)));
             }
             // If the rom file has not yet been unpacked, handle the text screen.
             else

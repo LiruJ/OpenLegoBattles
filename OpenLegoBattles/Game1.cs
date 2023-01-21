@@ -82,45 +82,18 @@ namespace OpenLegoBattles
             Services.AddService(romContentManager);
 
             // Start with the intro screen which also checks for the rom content. If the intro should be skipped, just go straight to the main menu.
-            if (options.SkipIntro) throw new NotImplementedException();
+            if (options.SkipIntro) gameStateManager.CreateAndAddGameState<FogTestState>();
             else gameStateManager.CreateAndAddGameState<IntroState>();
             
             graphics.PreferredBackBufferWidth = 1280;
             graphics.PreferredBackBufferHeight = 720;
             graphics.ApplyChanges();
-
-            //// Load the map.
-            //tilemap = romContentManager.Load<TilemapData>("mp16");
-
-            //tileGraphicsManager = TileGraphicsManager.Load(romContentManager, GraphicsDevice);
-            //tileGraphicsManager.LoadDataForMap(tilemap);
-
-            //graphics.PreferredBackBufferWidth = tileGraphicsManager.Tilesheet.TileSize.X * tilemap.Width;
-            //graphics.PreferredBackBufferHeight = tileGraphicsManager.Tilesheet.TileSize.Y * tilemap.Height;
-            //graphics.ApplyChanges();
         }
 
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
-            // TODO: Add your update logic here
-
-            //MouseState currentMouseState = Mouse.GetState();
-
-            //int mouseTileX = (int)MathF.Floor(currentMouseState.X / (float)tileGraphicsManager.Tilesheet.TileSize.X);
-            //int mouseTileY = (int)MathF.Floor(currentMouseState.Y / (float)tileGraphicsManager.Tilesheet.TileSize.Y);
-
-            //if (currentMouseState.LeftButton == ButtonState.Pressed && tilemap.IsPositionInRange(mouseTileX, mouseTileY))
-            //{
-            //    if (previousMouseState.LeftButton == ButtonState.Released)
-            //        treePlacement = !tilemap.HasTreeAtPosition(mouseTileX, mouseTileY);
-
-            //    tilemap.SetTreeAtPosition(mouseTileX, mouseTileY, treePlacement);
-            //}
-
-            //previousMouseState = currentMouseState;
 
             gameStateManager.Update(gameTime);
 
@@ -129,36 +102,6 @@ namespace OpenLegoBattles
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // TODO: Add your drawing code here
-
-            //spriteBatch.Begin();
-
-            //for (int x = 0; x < tilemap.Width; x++)
-            //{
-            //    for (int y = 0; y < tilemap.Height; y++)
-            //    {
-            //        int screenX = x * tileGraphicsManager.Tilesheet.TileSize.X;
-            //        int screenY = y * tileGraphicsManager.Tilesheet.TileSize.Y;
-
-            //        Rectangle source = tileGraphicsManager.GetTerrainBlockSource(tilemap[x, y].Index);
-
-            //        spriteBatch.Draw(tileGraphicsManager.Tilesheet.Texture, new Rectangle(screenX, screenY, tileGraphicsManager.Tilesheet.TileSize.X, tileGraphicsManager.Tilesheet.TileSize.Y), source, Color.White);
-
-            //        if (tilemap.HasTreeAtPosition(x, y))
-            //        {
-            //            DirectionMask mask = tileGraphicsManager.CreateTreeMask(tilemap, x, y);
-            //            ushort index = tileGraphicsManager.TreeRuleSet.GetBlockForTileHash(mask);
-            //            //ushort index = tempTreeMap[x, y];
-            //            Rectangle treeSource = tileGraphicsManager.Tilesheet.CalculateSourceRectangle(index);
-            //            spriteBatch.Draw(tileGraphicsManager.Tilesheet.Texture, new Rectangle(screenX, screenY, tileGraphicsManager.Tilesheet.TileSize.X, tileGraphicsManager.Tilesheet.TileSize.Y), treeSource, Color.White);
-            //        }
-            //    }
-            //}
-
-            //spriteBatch.End();
-
             gameStateManager.Draw(gameTime);
 
             base.Draw(gameTime);
