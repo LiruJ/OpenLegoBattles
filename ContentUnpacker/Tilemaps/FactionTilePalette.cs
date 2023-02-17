@@ -81,7 +81,7 @@ namespace ContentUnpacker.Tilemaps
 
             // Add the trees and fog first.
             TreeConnectionRules.AddTreesToSpritesheet(colourPalette, outputSpritesheet, factionSpritesheet, FactionPalette, FactionTilesetName);
-            addFogToSpritesheet(colourPalette, outputSpritesheet, fogSpritesheet);
+            FogConnectionRules.AddFogToSpritesheet(colourPalette, outputSpritesheet, fogSpritesheet);
 
             // Set the terrain sub-tile index to the current index of the saver, as that is where the terrain tiles will be placed.
             TerrainSubTileStartIndex = outputSpritesheet.CurrentTileIndex;
@@ -92,12 +92,6 @@ namespace ContentUnpacker.Tilemaps
 
             // Save the output spritesheet.
             outputSpritesheet.Save(options.OutputFolder, FactionTilesetName);
-        }
-
-        private void addFogToSpritesheet(ColourPaletteLoader colourPalette, SpritesheetSaver outputSpritesheet, SpritesheetLoader fogSpritesheet)
-        {
-            foreach (ushort originalFogSubTileIndex in fogMapper)
-                outputSpritesheet.WriteTileFromLoader(fogSpritesheet, colourPalette, originalFogSubTileIndex);
         }
         #endregion
 
@@ -127,36 +121,6 @@ namespace ContentUnpacker.Tilemaps
 
             // Map the original index to the remapped index, add the offset, and return.
             return (ushort)(UsedTerrainSubTilesMapper.GetRemappedBlockIndex(originalIndex) + TerrainSubTileStartIndex.Value);
-        }
-        #endregion
-
-        #region Global Tile Functions
-        public static void SaveFogRules(string outputDirectory)
-        {
-            // Load the fog palette.
-            TilemapBlockPalette fogPalette = TilemapBlockPalette.LoadFromFile("Masks/FogTilePalette", null, false);
-
-            // Create the writer.
-            string filePath = Path.Combine(outputDirectory, "FogRules.trs");
-            Directory.CreateDirectory(outputDirectory);
-            FileStream outputFile = File.Create(filePath);
-            using BinaryWriter fogWriter = new(outputFile);
-
-            // Calculate the starting index of the fog sub-tiles in the destination sheet, and the start of the fog sub-tiles in the fog spritesheet.
-            // Note that it can be assumed that the tree indices * 6 is the number of sub-tiles used by trees, as they use a mask and therefore are each unique.
-            ushort fogDestinationSubTileStart = TreeConnectionRules.UsedSubIndicesCount;
-            ushort fogSourceSubTileStart = fogPalette.Min((fogBlock) => fogBlock.Min());
-
-            // Write the fog palette first, remapped to the optimised spritesheet.
-            fogWriter.Write((ushort)fogPalette.Blocks.Count);
-            foreach (TilemapPaletteBlock fogBlock in fogPalette)
-                foreach (ushort fogSubTileIndex in fogBlock)
-                {
-                    ushort remappedFogSubTileIndex = fogMapper.GetRemappedBlockIndex(fogSubTileIndex);
-                    fogWriter.Write((ushort)((remappedFogSubTileIndex) + fogDestinationSubTileStart));
-                }
-
-            // TODO: Write the actual rules that define which tiles are used where.
         }
         #endregion
 

@@ -101,7 +101,7 @@ namespace ContentUnpacker.Tilemaps
             // Create the global tree/fog palette/rules.
             string tilesetFolderPath = Path.Combine(options.OutputFolder, SpritesheetSaver.DefaultSpriteOutputFolder);
             TreeConnectionRules.SaveTreeRules(tilesetFolderPath);
-            FactionTilePalette.SaveFogRules(tilesetFolderPath);
+            FogConnectionRules.SaveFogRules(tilesetFolderPath);
 
             // Load the fog spritesheet.
             using SpritesheetLoader fogSpritesheet = SpritesheetLoader.Load(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, "FowTileset"));

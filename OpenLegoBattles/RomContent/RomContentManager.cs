@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace OpenLegoBattles.RomContent
 {
-    internal class RomContentManager
+    public class RomContentManager
     {
         #region Constants
         public const string BaseContentFolderName = "BaseGame";

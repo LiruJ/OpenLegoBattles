@@ -12,7 +12,7 @@ namespace OpenLegoBattles.Rendering
     /// <summary>
     /// A 2D camera used for viewing tilemaps, tile objects, and 3D objects composited onto the map.
     /// </summary>
-    internal class TileCamera
+    public class TileCamera
     {
         #region Dependencies
         private readonly GameWindow window;

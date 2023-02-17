@@ -15,5 +15,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TilemapBlockPalette.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TilemapPaletteBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tilemaps\TileType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\BitUtils.cs" />
   </ItemGroup>
 </Project>

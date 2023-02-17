@@ -5,7 +5,7 @@ namespace OpenLegoBattles.RomContent
     /// <summary>
     /// Handles loading content of a certain type.
     /// </summary>
-    internal interface IRomContentLoader
+    public interface IRomContentLoader
     {
         #region Properties
         /// <summary>

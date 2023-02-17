@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Main ValueCount="3">
+	
+	<!-- Values as defined in TileVisibilityType.cs, reused here, as follows:
+	0 - unseen (thick fog)
+	1 - seen (no fog)
+	2 - previously seen (thin fog)
+	-->
+	
+	<!--The stumps, used as the default rule-->
+	<DefaultRule OriginalIndices="7"/>
+
+	<Rules>
+		<!--Thick to thin fog-->
+		<!--The centre thick fog-->
+		<Rule OriginalIndices="0" Mask0="Top, Right, Bottom, Left"/>
+		
+		
+		<!--Thick to no fog-->
+		
+		<!--Thin to no fog-->
+		
+	</Rules>
+</Main>

@@ -1,5 +1,4 @@
 ﻿using GlobalShared.Content;
-using GlobalShared.DataTypes;
 using GlobalShared.Tilemaps;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,7 +10,7 @@ using System.IO;
 
 namespace OpenLegoBattles.Rendering
 {
-    internal class TileGraphicsManager
+    public class TileGraphicsManager
     {
         #region Dependencies
         private readonly RomContentManager romContentManager;
@@ -27,7 +26,7 @@ namespace OpenLegoBattles.Rendering
         /// <summary>
         /// The first index of the first terrain block in the tilesheet.
         /// </summary>
-        public ushort TerrainBlockOffset => (ushort)(TreeRuleSet.PaletteCount + FogRuleSet.PaletteCount);
+        public ushort TerrainBlockOffset => (ushort)(TreeRuleSet.PaletteCount + FogRuleSet.BlockPalette.Count);
 
         /// <summary>
         /// The connection rule set for drawing trees.
@@ -54,30 +53,16 @@ namespace OpenLegoBattles.Rendering
         public ushort GetTerrainBlockIndex(ushort index) => (ushort)(TerrainBlockOffset + index);
 
         public Rectangle GetTerrainBlockSource(ushort index) => Tilesheet.CalculateSourceRectangle(GetTerrainBlockIndex(index));
-
-        public static DirectionMask CreateTreeMask(TilemapData tilemap, int x, int y)
-        {
-            DirectionMask mask = 0;
-            if (tilemap.HasTreeAtPosition(x, y - 1)) mask |= DirectionMask.Top;
-            if (tilemap.HasTreeAtPosition(x + 1, y - 1)) mask |= DirectionMask.TopRight;
-            if (tilemap.HasTreeAtPosition(x + 1, y)) mask |= DirectionMask.Right;
-            if (tilemap.HasTreeAtPosition(x + 1, y + 1)) mask |= DirectionMask.BottomRight;
-            if (tilemap.HasTreeAtPosition(x, y + 1)) mask |= DirectionMask.Bottom;
-            if (tilemap.HasTreeAtPosition(x - 1, y + 1)) mask |= DirectionMask.BottomLeft;
-            if (tilemap.HasTreeAtPosition(x - 1, y)) mask |= DirectionMask.Left;
-            if (tilemap.HasTreeAtPosition(x - 1, y - 1)) mask |= DirectionMask.TopLeft;
-            return mask;
-        }
         #endregion
 
         #region Data Functions
-        public void LoadDataForMap(TilemapData tilemapData)
+        public void LoadDataForMap(TilemapData tilemap)
         {
             // Unload first.
             Unload();
 
             // Create the tilesheet.
-            Tilesheet = createTilePaletteTexture(tilemapData);
+            Tilesheet = createTilePaletteTexture(tilemap);
         }
 
         public void Unload()
@@ -92,10 +77,10 @@ namespace OpenLegoBattles.Rendering
         #endregion
 
         #region Graphical Functions
-        private Spritesheet createTilePaletteTexture(TilemapData tilemapData)
+        private Spritesheet createTilePaletteTexture(TilemapData tilemap)
         {
             // Load the spritesheet for the tilemap.
-            Spritesheet spritesheet = romContentManager.Load<Spritesheet>(tilemapData.TilesheetName);
+            Spritesheet spritesheet = romContentManager.Load<Spritesheet>(tilemap.TilesheetName);
 
             // Get the texture loader.
             TextureLoader textureLoader = (TextureLoader)romContentManager.GetLoaderForType<Texture2D>();
@@ -119,11 +104,12 @@ namespace OpenLegoBattles.Rendering
             for (int i = 0; i < TreeRuleSet.PaletteCount; i++, destinationIndex++)
                 writeTileBlock(TreeRuleSet.BlockPalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
             for (int i = 0; i < FogRuleSet.PaletteCount; i++, destinationIndex++)
+                //writeTileBlock(FogRuleSet.BlockPalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
                 writeTileBlock(FogRuleSet.BlockPalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
 
             // Write the terrain last.
-            for (int i = 0; i < tilemapData.TilePalette.Count; i++, destinationIndex++)
-                writeTileBlock(tilemapData.TilePalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
+            for (int i = 0; i < tilemap.TilePalette.Count; i++, destinationIndex++)
+                writeTileBlock(tilemap.TilePalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
 
             creatorSpriteBatch.End();
             graphicsDevice.SetRenderTarget(null);
@@ -134,7 +120,7 @@ namespace OpenLegoBattles.Rendering
             return packedSpritesheet;
         }
 
-        private static void writeTileBlock(TilemapPaletteBlock block, int index, Spritesheet sourceSpritesheet, Spritesheet destinationSpritesheet, SpriteBatch creatorSpriteBatch)
+        public static void writeTileBlock(TilemapPaletteBlock block, int index, Spritesheet sourceSpritesheet, Spritesheet destinationSpritesheet, SpriteBatch creatorSpriteBatch)
         {
             Point blockPosition = destinationSpritesheet.CalculateXYFromIndex(index);
             int screenX = blockPosition.X * sourceSpritesheet.TileSize.X * 3;

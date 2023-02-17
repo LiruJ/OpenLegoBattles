@@ -1,5 +1,6 @@
 ﻿using ContentUnpacker.Spritesheets;
 using GlobalShared.Tilemaps;
+using LiruGameHelper.XML;
 using System.Drawing;
 using System.Xml;
 
@@ -16,6 +17,11 @@ namespace ContentUnpacker.Tilemaps.TileRules
         /// The indices of the tree tiles within the original faction block palette.
         /// </summary>
         private static readonly IReadOnlyList<ushort> treeTilePaletteIndices;
+
+        /// <summary>
+        /// The number of values each tile can be.
+        /// </summary>
+        private static readonly byte valueCount;
         #endregion
 
         #region Properties
@@ -35,9 +41,12 @@ namespace ContentUnpacker.Tilemaps.TileRules
             List<ConnectionRuleSaver> connectionRules = new();
             XmlNode mainNode = treeRulesFile.LastChild ?? throw new Exception("Tree rules file missing main node");
 
+            // Load and calculate the bit values.
+            mainNode.ParseAttributeValueOrDefault<byte>("ValueCount", byte.TryParse, out valueCount, 2);
+
             // Load the default rules.
             XmlNode? defaultRuleNode = mainNode.SelectSingleNode("DefaultRule") ?? throw new Exception("Trees missing default rule node.");
-            defaultRule = ConnectionRuleSaver.LoadFromXmlNode(defaultRuleNode);
+            defaultRule = ConnectionRuleSaver.LoadFromXmlNode(defaultRuleNode, valueCount);
             treeTilePaletteIndices.AddRange(defaultRule.OriginalIndices);
 
             // Load each rule.
@@ -49,8 +58,7 @@ namespace ContentUnpacker.Tilemaps.TileRules
                     continue;
 
                 // Load the rule.
-                ConnectionRuleSaver connection = ConnectionRuleSaver.LoadFromXmlNode(ruleNode);
-
+                ConnectionRuleSaver connection = ConnectionRuleSaver.LoadFromXmlNode(ruleNode, valueCount);
                 connectionRules.Add(connection);
                 treeTilePaletteIndices.AddRange(connection.OriginalIndices);
             }
@@ -68,7 +76,7 @@ namespace ContentUnpacker.Tilemaps.TileRules
             // Create the writer.
             string filePath = Path.Combine(outputDirectory, "TreeRules.trs");
             Directory.CreateDirectory(outputDirectory);
-            FileStream outputFile = File.Create(filePath);
+            using FileStream outputFile = File.Create(filePath);
             using BinaryWriter treeWriter = new(outputFile);
 
             // Create the mapper between original and new tree indices.
@@ -80,13 +88,16 @@ namespace ContentUnpacker.Tilemaps.TileRules
             for (ushort i = 0; i < treeTilePaletteIndices.Count * 6; i++)
                 treeWriter.Write(i);
 
+            // Write the value count.
+            treeWriter.Write(valueCount);
+
             // Write the default tile.
-            defaultRule.SaveToFile(treeWriter, blockIndicesMapper);
+            defaultRule.SaveToFile(treeWriter, valueCount, blockIndicesMapper);
 
             // Write the actual rules that define which tiles are used where.
             treeWriter.Write((byte)connectionRules.Count);
             foreach (ConnectionRuleSaver rule in connectionRules)
-                rule.SaveToFile(treeWriter, blockIndicesMapper);
+                rule.SaveToFile(treeWriter, valueCount, blockIndicesMapper);
         }
         #endregion
 

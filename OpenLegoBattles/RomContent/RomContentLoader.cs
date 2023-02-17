@@ -4,7 +4,7 @@ namespace OpenLegoBattles.RomContent
 {
     /// <inheritdoc cref="IRomContentLoader"/>
     /// <typeparam name="T"> The type of content this loader loads. </typeparam>
-    internal abstract class RomContentLoader<T> : IRomContentLoader where T : class
+    public abstract class RomContentLoader<T> : IRomContentLoader where T : class
     {
         #region Dependencies
         protected readonly RomContentManager romContentManager;

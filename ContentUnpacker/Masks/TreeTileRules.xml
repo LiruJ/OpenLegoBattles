@@ -25,7 +25,7 @@
 			<Masks FullMask="Top, TopRight, Right" EmptyMask="Left, BottomRight"/>
 			<Masks FullMask="Top, TopRight, Right" EmptyMask="BottomLeft, TopLeft, BottomRight"/>
 		</Rule>
-	
+
 		<!--Top, right, bottom, left edges, in that order-->
 		<Rule OriginalIndices="1" FullMask="Left, BottomLeft, Bottom, BottomRight, Right" EmptyMask="Top">
 			<Masks FullMask="Left, BottomLeft, Bottom, BottomRight, Right" EmptyMask="TopRight, TopLeft"/>
@@ -45,7 +45,7 @@
 		<Rule OriginalIndices="20" FullMask="Left, TopLeft, Top, TopRight, Right, BottomRight, Bottom" EmptyMask="BottomLeft"/>
 		<Rule OriginalIndices="16" FullMask="Top, TopRight, Right, BottomRight, Bottom, BottomLeft, Left" EmptyMask="TopLeft"/>
 		<Rule OriginalIndices="15" FullMask="Right, BottomRight, Bottom, BottomLeft, Left, TopLeft, Top" EmptyMask="TopRight"/>
-		
+
 		<!--The diagonal corner trees-->
 		<Rule OriginalIndices="17" FullMask="Right, Bottom, BottomLeft, Left, Top, TopRight" EmptyMask="TopLeft, BottomRight"/>
 		<Rule OriginalIndices="22" FullMask="Right, BottomRight, Bottom, Left, TopLeft, Top" EmptyMask="TopRight, BottomLeft"/>

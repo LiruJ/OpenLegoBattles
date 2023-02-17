@@ -69,6 +69,7 @@ namespace ContentUnpacker
             // Create a collection to hold pooled binary readers.
             ConcurrentQueue<BinaryReader> pooledBinaryReaders = new();
 
+#if !CONTENTTEST
             // Create the unpacked files directory.
             if (Directory.Exists(WorkingFolderName))
                 Directory.Delete(WorkingFolderName, true);
@@ -76,6 +77,7 @@ namespace ContentUnpacker
 
             // Begin each stage in sequence.
             await DecompressionStage.BeginAsync(options, fileSystem, mainNode);
+#endif
             await TilemapOptimiserStage.BeginAsync(options);
 
 #if RELEASE
@@ -88,6 +90,6 @@ namespace ContentUnpacker
                 reader.Close();
             pooledBinaryReaders.Clear();
         }
-        #endregion
+#endregion
     }
 }

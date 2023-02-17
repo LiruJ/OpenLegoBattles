@@ -1,16 +1,15 @@
 ﻿using GlobalShared.Content;
-using GlobalShared.DataTypes;
 using GlobalShared.Tilemaps;
-using System;
+using GlobalShared.Utils;
 using System.Collections.Generic;
 using System.IO;
 
 namespace OpenLegoBattles.Rendering
 {
-    internal class ConnectionRuleSet
+    public class ConnectionRuleSet
     {
         #region Fields
-        private readonly Dictionary<DirectionMask, ConnectionRule> rulesByPossibleHashes = new();
+        private readonly Dictionary<uint, ConnectionRule> rulesByPossibleHashes = new();
         #endregion
 
         #region Properties
@@ -30,22 +29,36 @@ namespace OpenLegoBattles.Rendering
         public ushort BlockPaletteOffset { get; }
 
         public ConnectionRule DefaultRule { get; }
+
+        /// <summary>
+        /// The number of values that a single tile can have.
+        /// </summary>
+        public byte ValueCount { get; }
+
+        /// <summary>
+        /// The number of bits required to store all possible tile values.
+        /// </summary>
+        public byte BitCount { get; }
         #endregion
 
         #region Constructors
-        private ConnectionRuleSet(TilemapBlockPalette blockPalette, ushort blockPaletteOffset, IReadOnlyList<ConnectionRule> rules, ConnectionRule defaultRule)
+        private ConnectionRuleSet(byte valueCount, TilemapBlockPalette blockPalette, ushort blockPaletteOffset, BinaryReader reader)
         {
-            this.BlockPalette = blockPalette;
-            BlockPaletteOffset = blockPaletteOffset;
-            this.DefaultRule = defaultRule;
+            ValueCount = valueCount;
+            BitCount = BitUtils.calculateBitCount(valueCount - 1);
 
-            // Register the rules.
+            BlockPalette = blockPalette;
+            BlockPaletteOffset = blockPaletteOffset;
+
+            // Load and register the rules.
+            DefaultRule = ConnectionRule.LoadDefaultFromStream(this, reader);
+            IEnumerable<ConnectionRule> rules = readConnectionRules(this, reader);
             registerAllRuleHashes(rules);
         }
         #endregion
 
         #region Tile Functions
-        public ushort GetBlockForTileHash(DirectionMask hash) 
+        public ushort GetBlockForTileHash(uint hash) 
             => (ushort)(BlockPaletteOffset + (rulesByPossibleHashes.TryGetValue(hash, out ConnectionRule rule) ? rule : DefaultRule).FirstIndex);
         #endregion
 
@@ -53,30 +66,31 @@ namespace OpenLegoBattles.Rendering
         public static ConnectionRuleSet LoadFromFile(string filePath, ushort blockPaletteOffset)
         {
             // Load the file.
-            FileStream file = File.OpenRead(Path.ChangeExtension(filePath, ContentFileUtil.TileRuleSetExtension));
+            using FileStream file = File.OpenRead(Path.ChangeExtension(filePath, ContentFileUtil.TileRuleSetExtension));
             using BinaryReader reader = new(file);
 
             // Load the palette.
             TilemapBlockPalette blockPalette = TilemapBlockPalette.LoadFromFile(reader);
 
-            // Load the rules.
-            ConnectionRule defaultRule = ConnectionRule.LoadDefaultFromStream(reader);
-            byte ruleCount = reader.ReadByte();
-            List<ConnectionRule> rules = new(ruleCount);
-            for (int i = 0; i < ruleCount; i++)
-                rules.Add(ConnectionRule.LoadFromStream(reader));
+            // Load the value count.
+            byte valueCount = reader.ReadByte();
 
             // Create and return the rule set.
-            return new(blockPalette, blockPaletteOffset, rules, defaultRule);
+            return new(valueCount, blockPalette, blockPaletteOffset, reader);
         }
 
-        private void registerAllRuleHashes(IReadOnlyList<ConnectionRule> rules)
+        private static IEnumerable<ConnectionRule> readConnectionRules(ConnectionRuleSet connectionRuleSet, BinaryReader reader)
+        {
+            byte ruleCount = reader.ReadByte();
+            for (int i = 0; i < ruleCount; i++)
+                yield return ConnectionRule.LoadFromStream(connectionRuleSet, reader);
+        }
+
+        private void registerAllRuleHashes(IEnumerable<ConnectionRule> rules)
         {
             foreach (ConnectionRule rule in rules)
-                foreach (DirectionMask possibleHash in rule.AllPossibleTileMasks())
-                    //if (!
+                foreach (uint possibleHash in rule.AllPossibleTileMasks())
                         rulesByPossibleHashes.TryAdd(possibleHash, rule);
-                        //throw new Exception("Hash collision between two separate rules.");
         }
         #endregion
     }

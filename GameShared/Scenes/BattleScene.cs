@@ -1,8 +1,6 @@
-﻿using GlobalShared.Tilemaps;
+﻿using OpenLegoBattles.Players;
+using OpenLegoBattles.Tilemaps;
 using OpenLegoBattles.TilemapSystem;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GameShared.Scenes
 {
@@ -16,12 +14,25 @@ namespace GameShared.Scenes
         /// The tilemap data of the scene.
         /// </summary>
         public TilemapData Tilemap { get; }
+
+        /// <summary>
+        /// The viewable area of the tilemap.
+        /// </summary>
+        public TilemapVisibilityView VisibilityView { get; }
+
+        /// <summary>
+        /// The player whose perspective this scene is from.
+        /// </summary>
+        public BattlePlayer Owner { get; }
+
+        // TODO: NetworkManager (local, client), PlayerManager, BuildingManager, UnitManager, PickupManager
         #endregion
 
         #region Constructor
         public BattleScene(TilemapData tilemap)
         {
             Tilemap = tilemap;
+            VisibilityView = new(tilemap);
         }
         #endregion
     }

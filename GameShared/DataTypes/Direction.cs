@@ -1,6 +1,8 @@
 ﻿using GlobalShared.DataTypes;
 using Microsoft.Xna.Framework;
+using OpenLegoBattles.TilemapSystem;
 using System;
+using System.Collections.Generic;
 
 namespace GameShared.DataTypes
 {
@@ -36,12 +38,12 @@ namespace GameShared.DataTypes
 
         #region Presets
         /// <summary>
-        /// North (0, 1).
+        /// North (0, -1).
         /// </summary>
         public static Direction North => new(tileDirection.North);
 
         /// <summary>
-        /// North east (1, 1).
+        /// North east (1, -1).
         /// </summary>
         public static Direction NorthEast => new(tileDirection.NorthEast);
 
@@ -51,17 +53,17 @@ namespace GameShared.DataTypes
         public static Direction East => new(tileDirection.East);
 
         /// <summary>
-        /// South east (1, -1).
+        /// South east (1, 1).
         /// </summary>
         public static Direction SouthEast => new(tileDirection.SouthEast);
 
         /// <summary>
-        /// South (0, -1).
+        /// South (0, 1).
         /// </summary>
         public static Direction South => new(tileDirection.South);
 
         /// <summary>
-        /// South west (-1, -1).
+        /// South west (-1, 1).
         /// </summary>
         public static Direction SouthWest => new(tileDirection.SouthWest);
 
@@ -71,7 +73,7 @@ namespace GameShared.DataTypes
         public static Direction West => new(tileDirection.West);
 
         /// <summary>
-        /// North west (-1, 1)
+        /// North west (-1, -1)
         /// </summary>
         public static Direction NorthWest => new(tileDirection.NorthWest);
         #endregion
@@ -107,9 +109,9 @@ namespace GameShared.DataTypes
                 // Calculate the x.
                 int x = 0;
                 if (this == NorthEast || this == East || this == SouthEast)
-                    x = -1;
-                else if (this == SouthWest || this == West || this == NorthWest)
                     x = 1;
+                else if (this == SouthWest || this == West || this == NorthWest)
+                    x = -1;
 
                 // Calculate the y.
                 int y = 0;
@@ -181,6 +183,20 @@ namespace GameShared.DataTypes
             // Get the mask representation of this direction and check it against the given mask.
             DirectionMask checkMask = ToMask();
             return (mask & checkMask) == checkMask;
+        }
+        #endregion
+
+        #region Enumerators
+        public static IEnumerable<Direction> GetSurroundingDirectionsEnumator()
+        {
+            yield return North;
+            yield return NorthEast;
+            yield return East;
+            yield return SouthEast;
+            yield return South;
+            yield return SouthWest;
+            yield return West;
+            yield return NorthWest;
         }
         #endregion
 

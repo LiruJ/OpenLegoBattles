@@ -1,66 +1,94 @@
 ﻿using GameShared.Scenes;
+using GlobalShared.Tilemaps;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using OpenLegoBattles.Graphics;
 using OpenLegoBattles.Rendering;
 using OpenLegoBattles.RomContent;
 using OpenLegoBattles.TilemapSystem;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
 
 namespace OpenLegoBattles.GameStates
 {
     internal class FogTestState : IGameState
     {
         #region Fields
-        private BattleScene scene;
-
-        private TileCamera camera;
-
-        private TileGraphicsManager tileGraphicsManager;
-
-        private PlayerRenderManager renderManager;
+        private Spritesheet tiles;
         #endregion
 
         #region Properties
         public bool UpdateUnder => false;
 
         public bool DrawUnder => false;
+
+        public BattleScene Scene { get; }
+
+        public SceneRenderManager RenderManager { get; }
         #endregion
 
         #region Constructors
-        public FogTestState(RomContentManager romContentManager, GameWindow window, GraphicsDevice graphicsDevice)
+        public FogTestState(RomContentManager romContentManager, TileGraphicsManager tileGraphicsManager, GameWindow window, GraphicsDevice graphicsDevice)
         {
             TilemapData tilemap = romContentManager.Load<TilemapData>("mp01");
-            scene = new(tilemap);
-            camera = new(window, new(graphicsDevice));
+            Scene = new(tilemap);
 
-            tileGraphicsManager = TileGraphicsManager.Load(romContentManager, graphicsDevice);
             tileGraphicsManager.LoadDataForMap(tilemap);
 
-            renderManager = new(scene, tileGraphicsManager);
+            Scene.VisibilityView.RevealCircle(3, 3, 3);
+            Scene.VisibilityView.ClearCurrentVisibility();
+            Scene.VisibilityView.RevealCircle(7, 3, 3);
 
-            camera.CentrePosition += new Point(5, 2);
+            RenderManager = SceneRenderManager.CreateFromScene(Scene, tileGraphicsManager, window, graphicsDevice);
+            RenderManager.CalculateAllFogTiles();
+
+            tiles = romContentManager.Load<Spritesheet>("KingTileset");
+
+            window.AllowUserResizing = true;
         }
         #endregion
 
         #region Update Functions
         public void Update(GameTime gameTime)
         {
-            
+
         }
         #endregion
 
         #region Draw Functions
         public void Draw(GameTime gameTime)
         {
-            camera.Begin();
 
-            renderManager.DrawScene(camera);
+            RenderManager.Draw();
+            //RenderManager.Camera.Begin();
+            //for (int i = 0; i < RenderManager.TileGraphicsManager.FogRuleSet.PaletteCount; i++)
+            //{
+            //    TilemapPaletteBlock block = RenderManager.TileGraphicsManager.FogRuleSet.BlockPalette[i];
+            //    Point blockPosition = RenderManager.TileGraphicsManager.Tilesheet.CalculateXYFromIndex(i);
+            //    int screenX = blockPosition.X * tiles.TileSize.X * 3;
+            //    int screenY = blockPosition.Y * tiles.TileSize.Y * 2;
+            //    int bottomRowScreenY = screenY + tiles.TileSize.Y;
 
-            camera.End();
+            //    Rectangle source = tiles.CalculateSourceRectangle(block.TopLeft);
+            //    RenderManager.Camera.SpriteBatch.Draw(tiles.Texture, new Rectangle(screenX, screenY, tiles.TileSize.X, tiles.TileSize.Y), source, Color.White);
+
+            //    source = tiles.CalculateSourceRectangle(block.TopMiddle);
+            //    RenderManager.Camera.SpriteBatch.Draw(tiles.Texture, new Rectangle(screenX + tiles.TileSize.X, screenY, tiles.TileSize.X, tiles.TileSize.Y), source, Color.White);
+
+            //    source = tiles.CalculateSourceRectangle(block.TopRight);
+            //    RenderManager.Camera.SpriteBatch.Draw(tiles.Texture, new Rectangle(screenX + (tiles.TileSize.X * 2), screenY, tiles.TileSize.X, tiles.TileSize.Y), source, Color.White);
+
+            //    source = tiles.CalculateSourceRectangle(block.BottomLeft);
+            //    RenderManager.Camera.SpriteBatch.Draw(tiles.Texture, new Rectangle(screenX, bottomRowScreenY, tiles.TileSize.X, tiles.TileSize.Y), source, Color.White);
+
+            //    source = tiles.CalculateSourceRectangle(block.BottomMiddle);
+            //    RenderManager.Camera.SpriteBatch.Draw(tiles.Texture, new Rectangle(screenX + tiles.TileSize.X, bottomRowScreenY, tiles.TileSize.X, tiles.TileSize.Y), source, Color.White);
+
+            //    source = tiles.CalculateSourceRectangle(block.BottomRight);
+            //    RenderManager.Camera.SpriteBatch.Draw(tiles.Texture, new Rectangle(screenX + (tiles.TileSize.X * 2), bottomRowScreenY, tiles.TileSize.X, tiles.TileSize.Y), source, Color.White);
+            //}
+            //RenderManager.Camera.End();
         }
         #endregion
     }

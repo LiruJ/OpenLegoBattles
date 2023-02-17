@@ -15,9 +15,6 @@ namespace OpenLegoBattles.Graphics
         /// <summary> The width and height in pixels of a single tile. </summary>
         public Point TileSize { get; }
 
-        /// <summary> The size of one preset tile, which is made of 3x2 regular tiles. </summary>
-        public Point PresetTileSize => TileSize * new Point(3, 2);
-
         /// <summary> How many tiles fit into the width of this spritesheet. </summary>
         public int Width { get; }
 

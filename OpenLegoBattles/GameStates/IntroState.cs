@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using OpenLegoBattles.Rendering;
 using OpenLegoBattles.RomContent;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,7 @@ namespace OpenLegoBattles.GameStates
         private readonly GraphicsDevice graphicsDevice;
         private readonly RomContentManager romContentManager;
         private readonly GameStateManager gameStateManager;
+        private readonly GameServiceContainer services;
         #endregion
 
         #region Fields
@@ -63,7 +65,7 @@ namespace OpenLegoBattles.GameStates
         #endregion
 
         #region Constructors
-        public IntroState(GameWindow window, ContentManager contentManager, GraphicsDevice graphicsDevice, RomContentManager romContentManager, GameStateManager gameStateManager)
+        public IntroState(GameWindow window, ContentManager contentManager, GraphicsDevice graphicsDevice, RomContentManager romContentManager, GameStateManager gameStateManager, GameServiceContainer services)
         {
             // Set dependencies.
             this.window = window;
@@ -71,6 +73,7 @@ namespace OpenLegoBattles.GameStates
             this.graphicsDevice = graphicsDevice;
             this.romContentManager = romContentManager;
             this.gameStateManager = gameStateManager;
+            this.services = services;
 
             // Create the spritebatch.
             spriteBatch = new(graphicsDevice);
@@ -94,7 +97,6 @@ namespace OpenLegoBattles.GameStates
 
             // Load the font and set the text.
             currentText = "Please drop the Lego Battles nds file onto the window";
-
 
             // Create the unpacker.
             romUnpacker = new(romContentManager.BaseGameDirectory);
@@ -137,6 +139,7 @@ namespace OpenLegoBattles.GameStates
                     {
                         // Start the main menu state.
                         // TODO: put main menu here.
+                        services.AddService(TileGraphicsManager.Load(romContentManager, graphicsDevice));
                         gameStateManager.CreateAndAddGameState<FogTestState>();
                         gameStateManager.Remove(this);
                     }

@@ -90,7 +90,7 @@ namespace OpenLegoBattles.TilemapSystem
         public static TilemapData Load(string filePath)
         {
             // Create the reader.
-            FileStream file = File.OpenRead(Path.ChangeExtension(filePath, ContentFileUtil.TilemapExtension));
+            using FileStream file = File.OpenRead(Path.ChangeExtension(filePath, ContentFileUtil.TilemapExtension));
             using BinaryReader reader = new(file);
 
             // Load the basic map info.

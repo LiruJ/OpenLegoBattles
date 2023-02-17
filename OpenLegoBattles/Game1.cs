@@ -57,9 +57,10 @@ namespace OpenLegoBattles
         {
             // Set the window title.
             Window.Title = "Open Lego Battles";
-            
+
             // Initialise the services.
             Services.AddService(Window);
+            Services.AddService(Services);
             Services.AddService(new Random());
             Services.AddService(gameStateManager);
             Services.AddService(GraphicsDevice);
@@ -77,14 +78,18 @@ namespace OpenLegoBattles
         {
             spriteBatch = new(GraphicsDevice);
 
-            // Create the content loader.
+            // Create the content loader and set up anything that needs it.
             romContentManager = new(GraphicsDevice, Content.RootDirectory);
             Services.AddService(romContentManager);
 
             // Start with the intro screen which also checks for the rom content. If the intro should be skipped, just go straight to the main menu.
-            if (options.SkipIntro) gameStateManager.CreateAndAddGameState<FogTestState>();
+            if (options.SkipIntro)
+            {
+                Services.AddService(TileGraphicsManager.Load(romContentManager, GraphicsDevice));
+                gameStateManager.CreateAndAddGameState<FogTestState>();
+            }
             else gameStateManager.CreateAndAddGameState<IntroState>();
-            
+
             graphics.PreferredBackBufferWidth = 1280;
             graphics.PreferredBackBufferHeight = 720;
             graphics.ApplyChanges();
