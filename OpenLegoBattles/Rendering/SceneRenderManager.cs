@@ -1,17 +1,18 @@
-﻿using GameShared.DataTypes;
-using GameShared.Scenes;
-using GlobalShared.DataTypes;
+﻿using GlobalShared.DataTypes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using OpenLegoBattles.DataTypes;
+using OpenLegoBattles.Scenes;
 using OpenLegoBattles.Tilemaps;
 using OpenLegoBattles.TilemapSystem;
+using System;
 
 namespace OpenLegoBattles.Rendering
 {
     /// <summary>
     /// Handles the drawing of a player's scene.
     /// </summary>
-    public class SceneRenderManager
+    public class SceneRenderManager : IDisposable
     {
         #region Fields
         private readonly byte[,] treeTiles;
@@ -44,19 +45,23 @@ namespace OpenLegoBattles.Rendering
             Camera = camera;
             treeTiles = new byte[scene.Tilemap.Width, scene.Tilemap.Height];
             fogTiles = new byte[scene.Tilemap.Width, scene.Tilemap.Height];
-            calculateAllTreeTiles();
+            CalculateAllTreeTiles();
         }
         #endregion
 
+        #region Load Functions
+        public void Unload() => Dispose();
+        #endregion
+
         #region Tree Functions
-        private void calculateAllTreeTiles()
+        public void CalculateAllTreeTiles()
         {
             for (int y = 0; y < Scene.Tilemap.Height; y++)
                 for (int x = 0; x < Scene.Tilemap.Width; x++)
                     if (Scene.Tilemap.HasTreeAtPosition(x, y))
                     {
                         uint treeMask = CreateTreeMask(Scene.Tilemap, x, y);
-                        treeTiles[x, y] = (byte)TileGraphicsManager.TreeRuleSet.GetBlockForTileHash(treeMask);
+                        treeTiles[x, y] = (byte)TileGraphicsManager.TreeRuleSet.GetBlockForBinaryTileHash(treeMask);
                     }
                     else treeTiles[x, y] = byte.MaxValue;
         }
@@ -65,12 +70,17 @@ namespace OpenLegoBattles.Rendering
         {
             for (int y = 0; y < Scene.Tilemap.Height; y++)
                 for (int x = 0; x < Scene.Tilemap.Width; x++)
-                    if (Scene.VisibilityView[x, y] != TileVisibilityType.Seen)
+                {
+
+                    TileVisibilityType tileVisibility = Scene.VisibilityView[x, y];
+                    if (TileGraphicsManager.FogRuleSet.TargetValueHasRules((byte)tileVisibility))
+                    //if (tileVisibility != TileVisibilityType.Seen && TileGraphicsManager.FogRuleSet.TargetValueHasRules((byte)tileVisibility))
                     {
                         uint fogMask = CreateFogMask(Scene.VisibilityView, x, y);
-                        fogTiles[x, y] = (byte)TileGraphicsManager.FogRuleSet.GetBlockForTileHash(fogMask);
+                        fogTiles[x, y] = (byte)TileGraphicsManager.FogRuleSet.GetBlockForTileHash((byte)tileVisibility, fogMask);
                     }
                     else fogTiles[x, y] = byte.MaxValue;
+                }
         }
 
         public static uint CreateTreeMask(TilemapData tilemap, int x, int y)
@@ -82,7 +92,7 @@ namespace OpenLegoBattles.Rendering
             return (uint)mask;
         }
 
-        public static uint CreateFogMask(TilemapVisibilityView visibilityView, int x, int y)
+        public uint CreateFogMask(TilemapVisibilityView visibilityView, int x, int y)
         {
             // Calculate the mask using the surrounding tiles.
             uint mask = 0;
@@ -90,7 +100,7 @@ namespace OpenLegoBattles.Rendering
             foreach (Direction direction in Direction.GetSurroundingDirectionsEnumator())
             {
                 uint visibilityValue = (uint)visibilityView.GetTileVisibility(x + direction.TileNormal.X, y + direction.TileNormal.Y);
-                mask |= visibilityValue << i;
+                mask |= visibilityValue << (i * TileGraphicsManager.FogRuleSet.BitCount);
                 i--;
             }
 
@@ -143,8 +153,12 @@ namespace OpenLegoBattles.Rendering
         {
             for (int y = 0; y < Scene.Tilemap.Height; y++)
                 for (int x = 0; x < Scene.Tilemap.Width; x++)
-                    if (Scene.VisibilityView[x, y] != TileVisibilityType.Seen)
+                    if (fogTiles[x, y] != byte.MaxValue)
+                    {
+                        //Color fogColour = Scene.VisibilityView[x, y] == TileVisibilityType.Unseen ? Color.Magenta : Color.White;
+                        //camera.DrawTileAtTilePosition(TileGraphicsManager.Tilesheet, fogTiles[x, y], x, y, fogColour);
                         camera.DrawTileAtTilePosition(TileGraphicsManager.Tilesheet, fogTiles[x, y], x, y);
+                    }
         }
         #endregion
 
@@ -155,6 +169,14 @@ namespace OpenLegoBattles.Rendering
             TileCamera camera = new(window, new(graphicsDevice));
             tileGraphicsManager.LoadDataForMap(scene.Tilemap);
             return new(scene, tileGraphicsManager, camera);
+        }
+        #endregion
+
+        #region Disposal Functions
+        public void Dispose()
+        {
+            TileGraphicsManager.Unload();
+            Camera.Dispose();
         }
         #endregion
     }

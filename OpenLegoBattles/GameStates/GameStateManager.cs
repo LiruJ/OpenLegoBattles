@@ -32,18 +32,29 @@ namespace OpenLegoBattles.GameStates
         #endregion
 
         #region GameState Functions
+        /// <summary>
+        /// Removes all gamestates.
+        /// </summary>
+        public void RemoveAll()
+        {
+            while (gameStates.Last != null)
+                Remove(gameStates.Last.Value);
+        }
+
         /// <summary> Completely removes the given <paramref name="gameState"/> from the manager. </summary>
         /// <param name="gameState"> The <see cref="IGameState"/> to remove. </param>
-        public void Remove(IGameState gameState)
+        /// <param name="skipUnloading"> <c>true</c> if the <see cref="IGameState.Unload"/> function should be skipped. <c>false</c> by default. </param>
+        public void Remove(IGameState gameState, bool skipUnloading = false)
         {
             // Find the node of the given gamestate within the list.
-            LinkedListNode<IGameState> gameStateNode = gameStates.Find(gameState);
-
-            // If the node is null, the gamestate does not exist, so throw an exception.
-            if (gameStateNode is null) throw new Exception("Given gamestate does not exist within the manager, so cannot be removed.");
-
+            LinkedListNode<IGameState> gameStateNode = gameStates.Find(gameState) ?? throw new Exception("Given gamestate does not exist within the manager, so cannot be removed.");
+            
             // Remove the gamestate.
             gameStates.Remove(gameStateNode);
+
+            // If unloading should be done, do so.
+            if (!skipUnloading)
+                gameState.Unload();
         }
 
         /// <summary> Pushes the given <paramref name="gameState"/> to the top, making it the current <see cref="IGameState"/>. </summary>
@@ -51,10 +62,7 @@ namespace OpenLegoBattles.GameStates
         public void PushToTop(IGameState gameState)
         {
             // Find the node of the given gamestate within the list.
-            LinkedListNode<IGameState> gameStateNode = gameStates.Find(gameState);
-
-            // If the node is null, the gamestate does not exist, so throw an exception.
-            if (gameStateNode is null) throw new Exception("Given gamestate does not exist within the manager, so cannot be pushed to the top.");
+            LinkedListNode<IGameState> gameStateNode = gameStates.Find(gameState) ?? throw new Exception("Given gamestate does not exist within the manager, so cannot be pushed to the top.");
 
             // Remove the gamestate, then re-add it at the top.
             gameStates.Remove(gameStateNode);
@@ -66,9 +74,8 @@ namespace OpenLegoBattles.GameStates
             // If the type does not use IGameState at all, throw an exception.
             if (type.GetInterface(typeof(IGameState).Name) is null) throw new Exception($"{type.Name} does not implement the {typeof(IGameState).Name} interface.");
 
+            // Create the gamestate, load it, add it to the list, and return it.
             ConstructorInfo constructorInfo = type.GetOnlyConstructor();
-
-            // Create the gamestate, add it to the list, and return it.
 #if DEBUG
             IGameState gameState;
 
@@ -78,6 +85,7 @@ namespace OpenLegoBattles.GameStates
 #else
             IGameState gameState = (IGameState)(Dependencies.CreateObjectWithDependencies(constructorInfo, services, inputs));
 #endif
+            gameState.Load();
             gameStates.AddLast(gameState);
             return gameState;
         }

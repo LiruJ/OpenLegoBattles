@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using OpenLegoBattles.TilemapSystem;
-using System;
+using OpenLegoBattles.Utils;
 
 namespace OpenLegoBattles.Tilemaps
 {
@@ -18,6 +18,9 @@ namespace OpenLegoBattles.Tilemaps
         #endregion
 
         #region Fields
+        /// <summary>
+        /// The raw visibility data for each tile in the world.
+        /// </summary>
         private readonly TileVisibilityType[,] visibilityData;
         #endregion
 
@@ -29,6 +32,10 @@ namespace OpenLegoBattles.Tilemaps
         #endregion
 
         #region Constructors
+        /// <summary>
+        /// Creates a new visibility view for the given map.
+        /// </summary>
+        /// <param name="tilemap"> The tilemap that the visibility is for. </param>
         public TilemapVisibilityView(TilemapData tilemap)
         {
             Tilemap = tilemap;
@@ -39,20 +46,51 @@ namespace OpenLegoBattles.Tilemaps
         }
         #endregion
 
-        #region Vision Functions
+        #region Get Vision Functions
+        /// <summary>
+        /// Finds if the given tile position can be seen. This is true if the given position or any of its adjacent tiles have been seen before.
+        /// </summary>
+        /// <param name="position"> The position of the tile. </param>
+        /// <returns> <c>true</c> if the given position or any of its adjacent tiles have been seen before; otherwise <c>false</c>. </returns>
+        public bool IsTileVisible(Point position) => IsTileVisible(position.X, position.Y);
+
+        /// <summary>
+        /// Finds if the given tile position can be seen. This is true if the given position or any of its adjacent tiles have been seen before.
+        /// </summary>
+        /// <param name="x"> The x position of the tile. </param>
+        /// <param name="y"> The y position of the tile. </param>
+        /// <returns> <c>true</c> if the given position or any of its adjacent tiles have been seen before; otherwise <c>false</c>. </returns>
         public bool IsTileVisible(int x, int y)
         {
-            // If the position is out of range, return true.
-            if (!Tilemap.IsPositionInRange(x, y)) return true;
+            // Return true if the tile or any of its adjacent tiles have been seen.
+            foreach (Point position in Spatial2dUtils.TilesDirectlyAdjacentToAndIncluding(x, y))
+            {
+                TileVisibilityType visibilityType = GetTileVisibility(position);
+                if (visibilityType == TileVisibilityType.Seen || visibilityType == TileVisibilityType.PreviouslySeen) return true;
+            }
 
-            // Return true if the tile has been seen at any point.
-            TileVisibilityType visibilityType = visibilityData[x, y];
-            return visibilityType == TileVisibilityType.Seen || visibilityType == TileVisibilityType.PreviouslySeen;
+            // Return false otherwise.
+            return false;
         }
 
-        public TileVisibilityType GetTileVisibility(int x, int y, TileVisibilityType defaultToIfOutOfRange = TileVisibilityType.Seen)
-            => visibilityData[MathHelper.Clamp(x, 0, Tilemap.Width - 1), MathHelper.Clamp(y, 0, Tilemap.Height - 1)];
+        /// <summary>
+        /// Gets the tile visibility for the given position.
+        /// </summary>
+        /// <param name="position"> The position of the tile to get the visibility of. </param>
+        /// <returns> The <see cref="TileVisibilityType"/> for the tile at the given position. </returns>
+        public TileVisibilityType GetTileVisibility(Point position) => GetTileVisibility(position.X, position.Y);
 
+        /// <summary>
+        /// Gets the tile visibility for the given position.
+        /// </summary>
+        /// <param name="x"> The x position of the tile to get the visibility of. </param>
+        /// <param name="y"> The y position of the tile to get the visibility of. </param>
+        /// <returns> The <see cref="TileVisibilityType"/> for the tile at the given position. </returns>
+        public TileVisibilityType GetTileVisibility(int x, int y)
+            => visibilityData[MathHelper.Clamp(x, 0, Tilemap.Width - 1), MathHelper.Clamp(y, 0, Tilemap.Height - 1)];
+        #endregion
+
+        #region Set Vision Functions
         /// <summary>
         /// Sets all tiles as unseen.
         /// </summary>
@@ -63,6 +101,9 @@ namespace OpenLegoBattles.Tilemaps
                     visibilityData[x, y] = TileVisibilityType.Unseen;
         }
 
+        /// <summary>
+        /// Sets all seen tiles as previously seen.
+        /// </summary>
         public void ClearCurrentVisibility()
         {
             for (int y = 0; y < Tilemap.Height; y++)
@@ -71,20 +112,24 @@ namespace OpenLegoBattles.Tilemaps
                         visibilityData[x, y] = TileVisibilityType.PreviouslySeen;
         }
 
+        /// <summary>
+        /// Reveals (sets to <see cref="TileVisibilityType.Seen"/>) all tiles in a <paramref name="radius"/> around the given <paramref name="centreX"/> and <paramref name="centreY"/>.
+        /// </summary>
+        /// <param name="centreX"> The x position of the centre of the circle. </param>
+        /// <param name="centreY"> The y position of the centre of the circle. </param>
+        /// <param name="radius"> The radius in tiles around the centre position that is revealed. </param>
         public void RevealCircle(int centreX, int centreY, int radius)
         {
-            // Calculate the direct centre position.
-            Vector2 centrePosition = new(centreX + 0.5f, centreY + 0.5f);
+            // Go over each tile in the radius around the position.
+            foreach (Point position in Spatial2dUtils.TilesInRadiusAround(centreX, centreY, radius))
+            {
+                // If the position is out of range, do nothing.
+                if (!Tilemap.IsPositionInRange(position.X, position.Y))
+                    continue;
 
-            // Go over each tile in a square around the centre.
-            for (int currentY = centreY - radius; currentY <= centreY + radius; currentY++)
-                for (int currentX = centreX - radius; currentX <= centreX + radius; currentX++)
-                {
-                    // Check the current position's distance from the centre. If it's within the radius, mark the tile as seen. Add the half-tile offset to the radius, which ends up being 1, and check it against the centre-tile positions.
-                    float currentDistanceSquared = Vector2.DistanceSquared(centrePosition, new(currentX + 0.5f, currentY + 0.5f));
-                    if (currentDistanceSquared <= MathF.Pow(radius, 2) + 1)
-                        visibilityData[currentX, currentY] = TileVisibilityType.Seen;
-                }
+                // Set the tile as seen.
+                visibilityData[position.X, position.Y] = TileVisibilityType.Seen;
+            }
         }
         #endregion
     }

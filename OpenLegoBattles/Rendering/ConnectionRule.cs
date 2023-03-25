@@ -1,6 +1,5 @@
-﻿using GameShared.DataTypes;
-using GlobalShared.DataTypes;
-using System;
+﻿using GlobalShared.DataTypes;
+using OpenLegoBattles.DataTypes;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,14 +8,6 @@ namespace OpenLegoBattles.Rendering
 {
     public class ConnectionRule
     {
-        #region Types
-        /// <summary>
-        /// The 3 different states that a tile can be in for a rule.
-        /// </summary>
-        //[Flags]
-        //private enum tileMaskType : byte { EitherFullOrEmpty = 0, MustBeFull = 0b01, MustBeEmpty = 0b10 }
-        #endregion
-
         #region Dependencies
         private readonly ConnectionRuleSet connectionRuleSet;
         #endregion
@@ -51,55 +42,6 @@ namespace OpenLegoBattles.Rendering
             this.connectionRuleSet = connectionRuleSet;
         }
         #endregion
-
-        //#region Rule Functions
-        //public IEnumerable<DirectionMask> AllPossibleTileMasks()
-        //{
-        //    // Calculate the masks for every mask in the rule.
-        //    foreach (DirectionMask[] masks in Masks)
-        //    {
-        //        // Calculate the mask types for each direction.
-        //        tileMaskType[] directionMaskTypes = new tileMaskType[8];
-        //        for (byte i = 0; i < 8; i++)
-        //            directionMaskTypes[i] = calculateMaskTypeForDirection(new Direction(i), masks);
-
-        //        // Go over all possiblities from the first bit.
-        //        foreach (DirectionMask possiblity in allPossibleTileMasks(directionMaskTypes, 0, DirectionMask.None))
-        //            yield return possiblity;
-        //    }
-        //}
-
-        //private IEnumerable<DirectionMask> allPossibleTileMasks(tileMaskType[] directionMaskTypes, byte index, DirectionMask startMask)
-        //{
-        //    // Go over each remaining index in a mask.
-        //    for (byte i = index; i < 8; i++)
-        //    {
-        //        // Get the current mask type.
-        //        tileMaskType maskType = directionMaskTypes[i];
-
-        //        // If the mask type is simply that it must be full, set the bit on the mask.
-        //        if (maskType == tileMaskType.MustBeFull)
-        //            startMask |= new Direction(i).ToMask();
-        //        // Otherwise; recursively calculate all possible masks with this tile being full. Possiblities with this tile being empty will be calculated regardless.
-        //        else if (maskType == tileMaskType.EitherFullOrEmpty)
-        //            foreach (DirectionMask possiblity in allPossibleTileMasks(directionMaskTypes, (byte)(i + 1), startMask | new Direction(i).ToMask()))
-        //                yield return possiblity;
-        //    }
-
-        //    // Return the calculated starting mask.
-        //    yield return startMask;
-        //}
-
-        //private static tileMaskType calculateMaskTypeForDirection(Direction direction, (DirectionMask full, DirectionMask empty) masks)
-        //{
-        //    // Calculate the mask type based on the state requirements of the tile.
-        //    bool requiresTile = direction.IsMaskDirectionSet(masks.full);
-        //    bool requiresEmpty = direction.IsMaskDirectionSet(masks.empty);
-        //    if (requiresTile && !requiresEmpty) return tileMaskType.MustBeFull;
-        //    else if (!requiresTile && requiresEmpty) return tileMaskType.MustBeEmpty;
-        //    else return tileMaskType.EitherFullOrEmpty;
-        //}
-        //#endregion
 
         #region Rule Functions
         public IEnumerable<uint> AllPossibleTileMasks()

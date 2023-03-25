@@ -4,10 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenLegoBattles", "OpenLegoBattles\OpenLegoBattles.csproj", "{0121CA07-48E6-4B39-81E0-02DFF7D1BBA8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34} = {974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentUnpacker", "ContentUnpacker\ContentUnpacker.csproj", "{974EFEE5-CBA8-4675-9E0F-6E0C1CBFAE34}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "GameShared", "GameShared\GameShared.shproj", "{A0CDBD0E-3A41-42B7-9425-A838BC2C7383}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "GlobalShared", "GlobalShared\GlobalShared.shproj", "{23261ED7-F7F1-4E55-B311-EE3148B11818}"
 EndProject
@@ -38,10 +39,8 @@ Global
 		SolutionGuid = {CC0288FA-4A72-476E-A777-54DB5E9E9746}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		GameShared\GameShared.projitems*{0121ca07-48e6-4b39-81e0-02dff7d1bba8}*SharedItemsImports = 5
 		GlobalShared\GlobalShared.projitems*{0121ca07-48e6-4b39-81e0-02dff7d1bba8}*SharedItemsImports = 5
 		GlobalShared\GlobalShared.projitems*{23261ed7-f7f1-4e55-b311-ee3148b11818}*SharedItemsImports = 13
 		GlobalShared\GlobalShared.projitems*{974efee5-cba8-4675-9e0f-6e0c1cbfae34}*SharedItemsImports = 5
-		GameShared\GameShared.projitems*{a0cdbd0e-3a41-42b7-9425-a838bc2c7383}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

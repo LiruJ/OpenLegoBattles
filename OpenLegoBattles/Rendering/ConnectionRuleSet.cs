@@ -9,7 +9,7 @@ namespace OpenLegoBattles.Rendering
     public class ConnectionRuleSet
     {
         #region Fields
-        private readonly Dictionary<uint, ConnectionRule> rulesByPossibleHashes = new();
+        private readonly Dictionary<uint, ConnectionRule>[] hashRulesByTargetIndex;
         #endregion
 
         #region Properties
@@ -44,22 +44,53 @@ namespace OpenLegoBattles.Rendering
         #region Constructors
         private ConnectionRuleSet(byte valueCount, TilemapBlockPalette blockPalette, ushort blockPaletteOffset, BinaryReader reader)
         {
+            // Set number of possible values that are taken into account by the ruleset, and the number of bits required to store all values.
             ValueCount = valueCount;
             BitCount = BitUtils.calculateBitCount(valueCount - 1);
+
+            // Create the collection of rulesets by targets.
+            hashRulesByTargetIndex = new Dictionary<uint, ConnectionRule>[ValueCount];
 
             BlockPalette = blockPalette;
             BlockPaletteOffset = blockPaletteOffset;
 
             // Load and register the rules.
             DefaultRule = ConnectionRule.LoadDefaultFromStream(this, reader);
-            IEnumerable<ConnectionRule> rules = readConnectionRules(this, reader);
-            registerAllRuleHashes(rules);
+            loadAndRegisterAllRules(reader);
         }
         #endregion
 
         #region Tile Functions
-        public ushort GetBlockForTileHash(uint hash) 
-            => (ushort)(BlockPaletteOffset + (rulesByPossibleHashes.TryGetValue(hash, out ConnectionRule rule) ? rule : DefaultRule).FirstIndex);
+        public ushort GetBlockForBinaryTileHash(uint hash)
+        {
+#if DEBUG
+            if (ValueCount > 2) throw new System.Exception("Binary tile hash can only be used on a ruleset with a count of 2.");
+#endif
+
+            // Get the rule for the given hash in the rules for the value 1, defaulting if none is found.
+            if (!hashRulesByTargetIndex[1].TryGetValue(hash, out ConnectionRule rule)) rule = DefaultRule;
+            return (ushort)(BlockPaletteOffset + rule.FirstIndex);
+        }
+
+        public ushort GetBlockForTileHash(byte targetValue, uint hash)
+        {
+#if DEBUG
+            if (!TargetValueHasRules(targetValue)) throw new System.Exception("Target value has no assigned rules.");
+#endif
+            // TODO: Random indices.
+            // Get the rules for the target value, try get a rule for the hash (defaulting if none is found), and return an index from it.
+            Dictionary<uint, ConnectionRule> rulesByPossibleHashes = hashRulesByTargetIndex[targetValue];
+            if (!rulesByPossibleHashes.TryGetValue(hash, out ConnectionRule rule)) rule = DefaultRule;
+            return (ushort)(BlockPaletteOffset + rule.FirstIndex);
+        }
+
+
+        /// <summary>
+        /// Finds if the given target value has rules defined to it.
+        /// </summary>
+        /// <param name="targetValue"> The value of the centre tile of the rules to query. </param>
+        /// <returns> <c>True</c> if the given value has rules defined; otherwise <c>false</c>. </returns>
+        public bool TargetValueHasRules(byte targetValue) => targetValue >= 0 && targetValue <= ValueCount && hashRulesByTargetIndex[targetValue] != null;
         #endregion
 
         #region Load Functions
@@ -79,18 +110,31 @@ namespace OpenLegoBattles.Rendering
             return new(valueCount, blockPalette, blockPaletteOffset, reader);
         }
 
-        private static IEnumerable<ConnectionRule> readConnectionRules(ConnectionRuleSet connectionRuleSet, BinaryReader reader)
+        private void loadAndRegisterAllRules(BinaryReader reader)
         {
-            byte ruleCount = reader.ReadByte();
-            for (int i = 0; i < ruleCount; i++)
-                yield return ConnectionRule.LoadFromStream(connectionRuleSet, reader);
-        }
+            // Load the defined rules for each possible value.
+            for (int currentRuleValue = 0; currentRuleValue < ValueCount; currentRuleValue++)
+            {
+                // Read the number of rules and create the collection for it, if there are rules to add.
+                byte ruleCount = reader.ReadByte();
+                if (ruleCount == 0) continue;
 
-        private void registerAllRuleHashes(IEnumerable<ConnectionRule> rules)
-        {
-            foreach (ConnectionRule rule in rules)
-                foreach (uint possibleHash in rule.AllPossibleTileMasks())
+                Dictionary<uint, ConnectionRule> rulesByPossibleHashes = ruleCount > 0 ? hashRulesByTargetIndex[currentRuleValue] : null;
+                if (rulesByPossibleHashes == null)
+                {
+                    rulesByPossibleHashes = new Dictionary<uint, ConnectionRule>();
+                    hashRulesByTargetIndex[currentRuleValue] = rulesByPossibleHashes;
+                }
+
+                // Load each rule and add it to the collection.
+                for (int ruleIndex = 0; ruleIndex < ruleCount; ruleIndex++)
+                {
+                    // Load the rule and add each of its possible hashes to the hash dictionary.
+                    ConnectionRule rule = ConnectionRule.LoadFromStream(this, reader);
+                    foreach (uint possibleHash in rule.AllPossibleTileMasks())
                         rulesByPossibleHashes.TryAdd(possibleHash, rule);
+                }
+            }
         }
         #endregion
     }

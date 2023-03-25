@@ -13,17 +13,6 @@ namespace ContentUnpacker.Tilemaps.TileRules
 {
     internal static class FogConnectionRules
     {
-
-        // Each tile can be defined in each mask.
-        //  For example; with 3 different tile states, there are 3 separate masks.
-        //  Each mask defines that the tile can have that value.
-        //  If a tile is defined in multiple masks, it can be any of those values.
-        //  If a tile is defined in all or no masks, it can be any value.
-        //      There's no such thing as "no value", hence why not defining a value at all means it can be anything.
-        // 
-        // On the game side, a collection of possible values is generated for each tile, and a mask is generated with all possible values.
-        
-
         #region Fields
         /// <summary>
         /// The block palette as it originally exists in the game, loaded from the tbp file.
@@ -37,7 +26,7 @@ namespace ContentUnpacker.Tilemaps.TileRules
 
         private static readonly ConnectionRuleSaver defaultRule;
 
-        private static readonly IReadOnlyList<ConnectionRuleSaver> connectionRules;
+        private static readonly IReadOnlyList<ConnectionRuleSaver>[] connectionRulesByValueType;
 
         /// <summary>
         /// The number of values each tile can be.
@@ -50,7 +39,6 @@ namespace ContentUnpacker.Tilemaps.TileRules
         {
             // Load the original block palette and create the mapper between original and new fog indices.
             originalPalette = TilemapBlockPalette.LoadFromFile(Path.Combine("Masks", "FogTilePalette"), null, false);
-            List<ConnectionRuleSaver> connectionRules = new();
             fogMapper = new();
             foreach (TilemapPaletteBlock block in originalPalette)
                 fogMapper.AddCollection(block);
@@ -63,23 +51,45 @@ namespace ContentUnpacker.Tilemaps.TileRules
             // Load and calculate the bit values.
             mainNode.ParseAttributeValueOrDefault<byte>("ValueCount", byte.TryParse, out valueCount, 2);
 
+            // Create the collection of rules for each value type.
+            List<ConnectionRuleSaver>[] connectionRulesByValueType = new List<ConnectionRuleSaver>[valueCount];
+
             // Load the default rules.
             XmlNode? defaultRuleNode = mainNode.SelectSingleNode("DefaultRule") ?? throw new Exception("Fog missing default rule node.");
             defaultRule = ConnectionRuleSaver.LoadFromXmlNode(defaultRuleNode, valueCount);
 
-            // Load each rule.
-            XmlNode rulesNode = mainNode.SelectSingleNode("Rules") ?? throw new Exception("Fog missing rules node.");
-            foreach (XmlNode? ruleNode in rulesNode.ChildNodes)
+            // Go over each value type.
+            XmlNode targetValuesNode = mainNode.SelectSingleNode("Rules") ?? throw new Exception("Fog missing rules node.");
+            foreach (XmlNode targetValueNode in targetValuesNode)
             {
                 // Ensure the node is valid.
-                if (ruleNode == null || ruleNode.NodeType != XmlNodeType.Element)
+                if (targetValueNode.NodeType != XmlNodeType.Element)
                     continue;
+                if (!targetValueNode.TryParseAttributeValue("Value", byte.TryParse, out byte targetValue) || targetValue < 0 || targetValue >= valueCount)
+                    throw new Exception("Target node missing value attribute or it is out of range.");
 
-                // Load the rule.
-                ConnectionRuleSaver connection = ConnectionRuleSaver.LoadFromXmlNode(ruleNode, valueCount);
-                connectionRules.Add(connection);
+                // Load each rule.
+                foreach (XmlNode ruleNode in targetValueNode)
+                {
+                    // Ensure the node is valid.
+                    if (ruleNode.NodeType != XmlNodeType.Element)
+                        continue;
+
+                    // Get the collection for the rules of this target value, creating one if it does not already exist.
+                    List<ConnectionRuleSaver> connectionRules = connectionRulesByValueType[targetValue];
+                    if (connectionRules == null)
+                    {
+                        connectionRules = new List<ConnectionRuleSaver>();
+                        connectionRulesByValueType[targetValue] = connectionRules;
+                    }
+
+                    // Load the rule.
+                    ConnectionRuleSaver connection = ConnectionRuleSaver.LoadFromXmlNode(ruleNode, valueCount);
+                    connectionRules.Add(connection);
+                }
             }
-            FogConnectionRules.connectionRules = connectionRules;
+
+            FogConnectionRules.connectionRulesByValueType = connectionRulesByValueType;
         }
         #endregion
 
@@ -108,9 +118,17 @@ namespace ContentUnpacker.Tilemaps.TileRules
             defaultRule.SaveToFile(fogWriter, valueCount);
 
             // Write the actual rules that define which tiles are used where.
-            fogWriter.Write((byte)connectionRules.Count);
-            foreach (ConnectionRuleSaver rule in connectionRules)
-                rule.SaveToFile(fogWriter, valueCount);
+            foreach (IReadOnlyList<ConnectionRuleSaver> connectionRules in connectionRulesByValueType)
+            {
+                if (connectionRules == null)
+                    fogWriter.Write((byte)0);
+                else
+                {
+                    fogWriter.Write((byte)connectionRules.Count);
+                    foreach (ConnectionRuleSaver rule in connectionRules)
+                        rule.SaveToFile(fogWriter, valueCount);
+                }
+            }
         }
         #endregion
 

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OpenLegoBattles.RomContent
@@ -51,12 +47,24 @@ namespace OpenLegoBattles.RomContent
             Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(path, unpackerFolderName);
 #endif
 
+#if CONTENTTEST
+            if (Directory.Exists(BaseGameDirectory))
+                Directory.Delete(BaseGameDirectory, true);
+
+            // When testing content, run the content test content tool, which skips the decompression stage. This is faster than running the whole process.
+            string contentTestPath = "../../../../ContentUnpacker/bin/ContentTest/net6.0/";
+            ProcessStartInfo processStartInfo = new(Path.Combine(contentTestPath, unpackerProgramName), $"-i \"{romPath}\" -o \"{Path.GetFullPath(BaseGameDirectory)}\"")
+            {
+                WorkingDirectory = Path.GetFullPath(contentTestPath),
+#else
+            // In debug or release, just use the regular tool that's bundled in the bin's folder.
             ProcessStartInfo processStartInfo = new(Path.Combine(unpackerFolderName, unpackerProgramName), $"-i \"{romPath}\" -o \"{Path.GetFullPath(BaseGameDirectory)}\"")
             {
                 WorkingDirectory = Path.GetFullPath(unpackerFolderName),
-#if DEBUG
-                CreateNoWindow = false,
-#elif RELEASE
+#endif
+
+#if RELEASE
+                // Hide the window in release builds.
                 CreateNoWindow = true,
 #endif
                 UseShellExecute = false,
@@ -70,7 +78,7 @@ namespace OpenLegoBattles.RomContent
             unpackerProcess.Start();
             unpackerProcess.BeginOutputReadLine();
 
-
+            // Wait for the process to stop.
             await unpackerProcess.WaitForExitAsync();
         }
         #endregion

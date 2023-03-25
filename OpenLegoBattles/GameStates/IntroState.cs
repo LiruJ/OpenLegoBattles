@@ -4,9 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using OpenLegoBattles.Rendering;
 using OpenLegoBattles.RomContent;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OpenLegoBattles.GameStates
@@ -41,7 +38,7 @@ namespace OpenLegoBattles.GameStates
         #endregion
 
         #region Fields
-        private readonly SpriteBatch spriteBatch;
+        private SpriteBatch spriteBatch;
 
         private introState currentState = introState.Started;
 
@@ -74,7 +71,12 @@ namespace OpenLegoBattles.GameStates
             this.romContentManager = romContentManager;
             this.gameStateManager = gameStateManager;
             this.services = services;
+        }
+        #endregion
 
+        #region Load Functions
+        public void Load()
+        {
             // Create the spritebatch.
             spriteBatch = new(graphicsDevice);
 
@@ -85,6 +87,13 @@ namespace OpenLegoBattles.GameStates
             // Handle the state based on if the rom has already been unpacked.
             if (RomUnpacker.FindIfHasUnpacked(romContentManager.BaseGameDirectory)) currentState = introState.PlayingIntro;
             else startWaitingForRomFile();
+        }
+
+        public void Unload()
+        {
+            spriteBatch.Dispose();
+            contentManager.UnloadAsset("Fonts/UnpackerFont");
+            contentManager.UnloadAsset("LegoLogo");
         }
         #endregion
 
@@ -140,7 +149,7 @@ namespace OpenLegoBattles.GameStates
                         // Start the main menu state.
                         // TODO: put main menu here.
                         services.AddService(TileGraphicsManager.Load(romContentManager, graphicsDevice));
-                        gameStateManager.CreateAndAddGameState<FogTestState>();
+                        gameStateManager.CreateAndAddGameState<RuleTestState>();
                         gameStateManager.Remove(this);
                     }
                     break;

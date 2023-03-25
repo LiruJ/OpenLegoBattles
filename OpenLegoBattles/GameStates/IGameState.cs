@@ -13,5 +13,9 @@ namespace OpenLegoBattles.GameStates
         void Draw(GameTime gameTime);
 
         void Update(GameTime gameTime);
+
+        void Load();
+
+        void Unload();
     }
 }

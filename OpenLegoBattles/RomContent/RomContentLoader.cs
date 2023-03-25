@@ -28,6 +28,8 @@ namespace OpenLegoBattles.RomContent
 
         /// <inheritdoc cref="IRomContentLoader.LoadObjectFromPath(string)"/>
         public virtual T LoadFromPath(string path) => null;
+
+        public virtual void Unload() { }
         #endregion
     }
 }

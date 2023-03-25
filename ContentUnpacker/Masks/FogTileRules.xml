@@ -1,24 +1,139 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Main ValueCount="3">
-	
+
 	<!-- Values as defined in TileVisibilityType.cs, reused here, as follows:
 	0 - unseen (thick fog)
 	1 - seen (no fog)
 	2 - previously seen (thin fog)
 	-->
-	
+
 	<!--The stumps, used as the default rule-->
 	<DefaultRule OriginalIndices="7"/>
 
 	<Rules>
-		<!--Thick to thin fog-->
-		<!--The centre thick fog-->
-		<Rule OriginalIndices="0" Mask0="Top, Right, Bottom, Left"/>
-		
-		
-		<!--Thick to no fog-->
-		
+		<Target Value="0">
+
+			<!--Thick to no fog-->
+			<!--The centre thick fog-->
+			<Rule OriginalIndices="0" Mask0="Top, Right, Bottom, Left"/>
+
+			<!--Middle piece-->
+			<Rule OriginalIndices="42" Mask1="Top, Right, Bottom, Left"/>
+
+			<!--Horizontal and vertical double edges, in that order-->
+			<Rule OriginalIndices="32" Mask0="Left, Right" Mask1="Top, Bottom"/>
+			<Rule OriginalIndices="17" Mask0="Top, Bottom" Mask1="Left, Right"/>
+
+			<!--Top, right, bottom, left end pieces, in that order-->
+			<Rule OriginalIndices="18" Mask0="Bottom" Mask1="Top, Left, Right"/>
+			<Rule OriginalIndices="40" Mask0="Left" Mask1="Top, Right, Bottom"/>
+			<Rule OriginalIndices="41" Mask0="Top" Mask1="Left, Bottom, Right"/>
+			<Rule OriginalIndices="34" Mask0="Right" Mask1="Top, Left, Bottom"/>
+
+			<!--Top left, top right, bottom right, and bottom left corners, in that order-->
+			<Rule OriginalIndices="6" Mask0="Bottom, Right" Mask1="Left, Top"/>
+			<Rule OriginalIndices="16" Mask0="Bottom, Left" Mask1="Right, Top"/>
+			<Rule OriginalIndices="39" Mask0="Top, Left" Mask1="Bottom, Right"/>
+			<Rule OriginalIndices="33" Mask0="Top, Right" Mask1="Bottom, Left"/>
+
+			<!--Top, right, bottom, left edges, in that order-->
+			<Rule OriginalIndices="2" Mask0="Bottom, Left, Right" Mask1="Top"/>
+			<Rule OriginalIndices="15" Mask0="Left, Top, Bottom" Mask1="Right"/>
+			<Rule OriginalIndices="31" Mask0="Top, Left, Right" Mask1="Bottom"/>
+			<Rule OriginalIndices="5" Mask0="Right, Top, Bottom" Mask1="Left"/>
+
+			<!--Thick to thin fog-->
+			<!--Middle piece-->
+			<Rule OriginalIndices="30" Mask2="Top, Right, Bottom, Left">
+				<Masks Mask1="Top, Right, Bottom, Left" Mask2="Top, Right, Bottom"/>
+				<Masks Mask1="Top, Right, Bottom, Left" Mask2="Top, Right, Left"/>
+				<Masks Mask1="Top, Right, Bottom, Left" Mask2="Top, Bottom, Left"/>
+				<Masks Mask1="Top, Right, Bottom, Left" Mask2="Right, Bottom, Left"/>
+			</Rule>
+
+			<!--Horizontal and vertical double edges, in that order-->
+			<Rule OriginalIndices="24" Mask0="Left, Right" Mask2="Top, Bottom">
+				<Masks Mask0="Left, Right" Mask1="Top" Mask2="Bottom"/>
+				<Masks Mask0="Left, Right" Mask1="Bottom" Mask2="Top"/>
+			</Rule>
+			<Rule OriginalIndices="13" Mask0="Top, Bottom" Mask2="Left, Right">
+				<Masks Mask0="Top, Bottom" Mask1="Left" Mask2="Right"/>
+				<Masks Mask0="Top, Bottom" Mask1="Right" Mask2="Left"/>
+			</Rule>
+
+			<!--Top, right, bottom, left end pieces, in that order-->
+			<Rule OriginalIndices="14" Mask0="Bottom" Mask2="Left, Top, Right">
+				<Masks Mask0="Bottom" Mask1="Left, Top, Right" Mask2="Left, Right"/>
+				<Masks Mask0="Bottom" Mask1="Left,  Right" Mask2="Left, Top, Right"/>
+			</Rule>
+			<Rule OriginalIndices="28" Mask0="Left" Mask2="Top, Right, Bottom">
+				<Masks Mask0="Left" Mask1="Top, Right, Bottom" Mask2="Top, Bottom"/>
+				<Masks Mask0="Left" Mask1="Top, Bottom" Mask2="Top, Right, Bottom"/>
+			</Rule>
+			<Rule OriginalIndices="29" Mask0="Top" Mask2="Left, Bottom, Right">
+				<Masks Mask0="Top" Mask1="Left, Bottom, Right" Mask2="Left, Right"/>
+				<Masks Mask0="Top" Mask1="Left, Right" Mask2="Left, Bottom, Right"/>
+			</Rule>
+			<Rule OriginalIndices="26" Mask0="Right" Mask2="Top, Left, Bottom">
+				<Masks Mask0="Right" Mask1="Top, Left, Bottom" Mask2="Top, Bottom"/>
+				<Masks Mask0="Right" Mask1="Top, Bottom" Mask2="Top, Left, Bottom"/>
+			</Rule>
+
+			<!--Top left, top right, bottom right, and bottom left corners, in that order-->
+			<Rule OriginalIndices="4" Mask0="Bottom, Right" Mask1="Left" Mask2="Top">
+				<Masks Mask0="Bottom, Right" Mask1="Top" Mask2="Left"/>
+				<Masks Mask0="Bottom, Right" Mask2="Top, Left"/>
+			</Rule>
+			<Rule OriginalIndices="12" Mask0="Bottom, Left" Mask1="Right" Mask2="Top">
+				<Masks Mask0="Bottom, Left" Mask1="Top" Mask2="Right"/>
+				<Masks Mask0="Bottom, Left" Mask2="Top, Right"/>
+			</Rule>
+			<Rule OriginalIndices="27" Mask0="Top, Left" Mask1="Right" Mask2="Bottom">
+				<Masks Mask0="Top, Left" Mask1="Bottom" Mask2="Right"/>
+				<Masks Mask0="Top, Left" Mask2="Bottom, Right"/>
+			</Rule>
+			<Rule OriginalIndices="25" Mask0="Top, Right" Mask1="Left" Mask2="Bottom">
+				<Masks Mask0="Top, Right" Mask1="Bottom" Mask2="Left"/>
+				<Masks Mask0="Top, Right" Mask2="Bottom, Left"/>
+			</Rule>
+
+			<!--Top, right, bottom, left edges, in that order-->
+			<Rule OriginalIndices="1" Mask0="Bottom, Left, Right" Mask2="Top"/>
+			<Rule OriginalIndices="11" Mask0="Left, Top, Bottom" Mask2="Right"/>
+			<Rule OriginalIndices="23" Mask0="Top, Left, Right" Mask2="Bottom"/>
+			<Rule OriginalIndices="3" Mask0="Right, Top, Bottom" Mask2="Left"/>
+		</Target>
+
 		<!--Thin to no fog-->
-		
+		<Target Value="2">
+			<!--The centre thin fog-->
+			<Rule OriginalIndices="7" Mask2="Top, Right, Bottom, Left"/>
+
+      <!--Middle piece-->
+      <Rule OriginalIndices="46" Mask1="Top, Right, Bottom, Left"/>
+
+      <!--Horizontal and vertical double edges, in that order-->
+      <Rule OriginalIndices="36" Mask0="Left, Right" Mask2="Left, Right" Mask1="Top, Bottom"/>
+      <Rule OriginalIndices="21" Mask0="Top, Bottom" Mask2="Top, Bottom" Mask1="Left, Right"/>
+
+      <!--Top left, top right, bottom right, and bottom left corners, in that order-->
+			<Rule OriginalIndices="10"	Mask0="Bottom, Right"	Mask2="Bottom, Right"	Mask1="Left, Top"/>
+			<Rule OriginalIndices="20"	Mask0="Bottom, Left"	Mask2="Bottom, Left"	Mask1="Right, Top"/>
+			<Rule OriginalIndices="43"	Mask0="Top, Left"			Mask2="Top, Left"			Mask1="Bottom, Right"/>
+			<Rule OriginalIndices="37"	Mask0="Top, Right"		Mask2="Top, Right"		Mask1="Bottom, Left"/>
+
+			<!--Top, right, bottom, left edges, in that order-->
+			<Rule OriginalIndices="8"		Mask0="Bottom, Left, Right" Mask2="Bottom, Left, Right"	Mask1="Top"/>
+			<Rule OriginalIndices="19"	Mask0="Left, Top, Bottom"		Mask2="Left, Top, Bottom"		Mask1="Right"/>
+			<Rule OriginalIndices="35"	Mask0="Top, Left, Right"		Mask2="Top, Left, Right"		Mask1="Bottom"/>
+			<Rule OriginalIndices="9"		Mask0="Right, Top, Bottom"	Mask2="Right, Top, Bottom"	Mask1="Left"/>
+
+      <!--Top, right, bottom, left end pieces, in that order-->
+      <Rule OriginalIndices="22" Mask0="Bottom"	Mask2="Bottom"	Mask1="Top, Left, Right"/>
+      <Rule OriginalIndices="44" Mask0="Left"		Mask2="Left"		Mask1="Top, Right, Bottom"/>
+      <Rule OriginalIndices="45" Mask0="Top"		Mask2="Top"			Mask1="Left, Bottom, Right"/>
+      <Rule OriginalIndices="38" Mask0="Right"	Mask2="Right"		Mask1="Top, Left, Bottom"/>
+		</Target>
+
 	</Rules>
 </Main>

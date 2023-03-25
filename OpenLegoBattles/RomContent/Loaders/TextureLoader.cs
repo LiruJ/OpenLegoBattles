@@ -78,7 +78,7 @@ namespace OpenLegoBattles.RomContent.Loaders
                 }
         }
 
-        public void Unload()
+        public override void Unload()
         {
             foreach (Texture2D texture in managedTextures)
                 if (!texture.IsDisposed) texture.Dispose();

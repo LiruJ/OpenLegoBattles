@@ -1,5 +1,5 @@
-﻿using GameShared.Scenes;
-using OpenLegoBattles.Rendering;
+﻿using OpenLegoBattles.Rendering;
+using OpenLegoBattles.Scenes;
 
 namespace OpenLegoBattles.Players
 {

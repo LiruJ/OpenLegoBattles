@@ -21,6 +21,8 @@ namespace OpenLegoBattles.RomContent
         /// <param name="path"> The path of the content. </param>
         /// <returns> The loaded content. </returns>
         object LoadObjectFromPath(string path);
+
+        void Unload();
         #endregion
     }
 }

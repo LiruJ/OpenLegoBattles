@@ -1,11 +1,9 @@
 ﻿using GuiCookie;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using OpenLegoBattles.GameStates;
 using OpenLegoBattles.Rendering;
 using OpenLegoBattles.RomContent;
-using OpenLegoBattles.TilemapSystem;
 using System;
 using System.Reflection;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
@@ -19,20 +17,13 @@ namespace OpenLegoBattles
         private readonly CommandLineOptions options;
         #endregion
 
+        #region Fields
         private GraphicsDeviceManager graphics;
-        private SpriteBatch spriteBatch;
-
-        private TileGraphicsManager tileGraphicsManager;
-
-        private TilemapData tilemap;
 
         private RomContentManager romContentManager;
 
-        private MouseState previousMouseState;
-
-        private bool treePlacement;
-
         private GameStateManager gameStateManager;
+        #endregion
 
         internal Game1(CommandLineOptions options)
         {
@@ -76,23 +67,35 @@ namespace OpenLegoBattles
 
         protected override void LoadContent()
         {
-            spriteBatch = new(GraphicsDevice);
+            graphics.PreferredBackBufferWidth = 1280;
+            graphics.PreferredBackBufferHeight = 720;
+            graphics.ApplyChanges();
 
             // Create the content loader and set up anything that needs it.
             romContentManager = new(GraphicsDevice, Content.RootDirectory);
             Services.AddService(romContentManager);
 
+#if CONTENTTEST
+            // Do the basic content process without doing the whole decompression of the rom.
+            string contentTestRomPath = "../../../../ContentUnpacker/LEGO Battles.nds";
+            RomUnpacker romUnpacker = new(romContentManager.BaseGameDirectory);
+            romUnpacker.UnpackRomAsync(contentTestRomPath).Wait();
+#endif
+
             // Start with the intro screen which also checks for the rom content. If the intro should be skipped, just go straight to the main menu.
             if (options.SkipIntro)
             {
                 Services.AddService(TileGraphicsManager.Load(romContentManager, GraphicsDevice));
-                gameStateManager.CreateAndAddGameState<FogTestState>();
+                gameStateManager.CreateAndAddGameState<RuleTestState>();
             }
             else gameStateManager.CreateAndAddGameState<IntroState>();
+        }
 
-            graphics.PreferredBackBufferWidth = 1280;
-            graphics.PreferredBackBufferHeight = 720;
-            graphics.ApplyChanges();
+        protected override void UnloadContent()
+        {
+            base.UnloadContent();
+
+            gameStateManager.RemoveAll();
         }
 
         protected override void Update(GameTime gameTime)

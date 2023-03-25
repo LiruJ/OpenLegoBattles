@@ -4,9 +4,7 @@ using OpenLegoBattles.RomContent.Loaders;
 using OpenLegoBattles.TilemapSystem;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace OpenLegoBattles.RomContent
 {
@@ -14,10 +12,6 @@ namespace OpenLegoBattles.RomContent
     {
         #region Constants
         public const string BaseContentFolderName = "BaseGame";
-
-        private const string unpackerFolderName = "RomUnpacker";
-
-        private const string unpackerProgramName = "ContentUnpacker.exe";
         #endregion
 
         #region Dependencies
@@ -68,7 +62,6 @@ namespace OpenLegoBattles.RomContent
         #region Load Functions
         public T Load<T>(string path) where T : class
         {
-           
             // Get the reader for the given type.
             if (!contentLoadersByType.TryGetValue(typeof(T), out IRomContentLoader loader))
                 throw new ArgumentException("Given type has no associated loader.");
@@ -83,49 +76,14 @@ namespace OpenLegoBattles.RomContent
             // Return the content.
             return castContent;
         }
-        #endregion
 
-        #region Unpack Functions
-        public async Task UnpackRomAsync(string romPath)
+        /// <summary>
+        /// Unloads all cached content tracked by this manager.
+        /// </summary>
+        public void Unload()
         {
-            // Ensure the file exists.
-            if (string.IsNullOrEmpty(romPath) || !File.Exists(romPath))
-                throw new FileNotFoundException("Rom path could not be found.", romPath);
-
-#if DEBUG
-            // Copy the unpacker tool over for debug builds.
-            if (Directory.Exists(unpackerFolderName))
-                Directory.Delete(unpackerFolderName, true);
-            string path = Path.GetFullPath("../../../../ContentUnpacker/bin/Release/net6.0");
-            Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(path, unpackerFolderName);
-#endif
-
-            ProcessStartInfo processStartInfo = new(Path.Combine(unpackerFolderName, unpackerProgramName), $"-i \"{romPath}\" -o \"{Path.GetFullPath(Path.Combine(RootDirectory, BaseContentFolderName))}\"")
-            {
-                WorkingDirectory = Path.GetFullPath(unpackerFolderName),
-#if DEBUG
-                CreateNoWindow = false,
-#elif RELEASE
-                CreateNoWindow = true,
-#endif
-                UseShellExecute = false,
-                RedirectStandardOutput = true
-            };
-            Process unpackerProcess = new()
-            {
-                StartInfo = processStartInfo,
-            };
-            unpackerProcess.OutputDataReceived += UnpackerProcess_OutputDataReceived;
-            unpackerProcess.Start();
-            unpackerProcess.BeginOutputReadLine();
-
-
-            await unpackerProcess.WaitForExitAsync();
-        }
-
-        private void UnpackerProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            Console.WriteLine(e.Data);
+            foreach (IRomContentLoader contentLoader in contentLoadersByType.Values)
+                contentLoader.Unload();
         }
         #endregion
     }

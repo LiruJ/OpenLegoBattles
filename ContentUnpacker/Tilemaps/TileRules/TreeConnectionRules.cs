@@ -94,6 +94,9 @@ namespace ContentUnpacker.Tilemaps.TileRules
             // Write the default tile.
             defaultRule.SaveToFile(treeWriter, valueCount, blockIndicesMapper);
 
+            // Write a 0 for the number of rules targeting the value 0 (which is none).
+            treeWriter.Write((byte)0);
+
             // Write the actual rules that define which tiles are used where.
             treeWriter.Write((byte)connectionRules.Count);
             foreach (ConnectionRuleSaver rule in connectionRules)

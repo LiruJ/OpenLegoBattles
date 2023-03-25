@@ -104,7 +104,6 @@ namespace OpenLegoBattles.Rendering
             for (int i = 0; i < TreeRuleSet.PaletteCount; i++, destinationIndex++)
                 writeTileBlock(TreeRuleSet.BlockPalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
             for (int i = 0; i < FogRuleSet.PaletteCount; i++, destinationIndex++)
-                //writeTileBlock(FogRuleSet.BlockPalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
                 writeTileBlock(FogRuleSet.BlockPalette[i], destinationIndex, spritesheet, packedSpritesheet, creatorSpriteBatch);
 
             // Write the terrain last.

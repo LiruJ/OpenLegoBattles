@@ -42,6 +42,18 @@ namespace OpenLegoBattles.GameStates
         }
         #endregion
 
+        #region Load Functions
+        public void Load()
+        {
+
+        }
+
+        public void Unload()
+        {
+
+        }
+        #endregion
+
         #region Render Functions
         private void renderAllMapsToFiles()
         {
@@ -71,7 +83,7 @@ namespace OpenLegoBattles.GameStates
                         if (map.HasTreeAtPosition(x, y))
                         {
                             uint treeMask = SceneRenderManager.CreateTreeMask(map, x, y);
-                            ushort treeIndex = tileGraphicsManager.TreeRuleSet.GetBlockForTileHash(treeMask);
+                            ushort treeIndex = tileGraphicsManager.TreeRuleSet.GetBlockForBinaryTileHash(treeMask);
                             Rectangle treeSource = tileGraphicsManager.Tilesheet.CalculateSourceRectangle(treeIndex);
                             spriteBatch.Draw(tileGraphicsManager.Tilesheet.Texture, new Rectangle(x * source.Width, y * source.Height, source.Width, source.Height), treeSource, Color.White);
                         }
