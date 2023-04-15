@@ -1,8 +1,7 @@
 {
   "profiles": {
     "OpenLegoBattles": {
-      "commandName": "Project",
-      "commandLineArgs": "--noIntro"
+      "commandName": "Project"
     }
   }
 }
