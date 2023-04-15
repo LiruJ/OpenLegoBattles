@@ -95,12 +95,9 @@ namespace ContentUnpacker.Spritesheets
             ushort packedColour = reader.ReadUInt16();
 
             // Unpack each channel.
-            byte r = (byte)((packedColour & 0b0_00000_00000_11111) * 8);
-            r = (byte)Math.Min(r + Math.Floor(r / 31f), byte.MaxValue);
-            byte g = (byte)(((packedColour & 0b0_00000_11111_00000) >> 5) * 8);
-            g = (byte)Math.Min(g + Math.Floor(g / 31f), byte.MaxValue);
-            byte b = (byte)(((packedColour & 0b0_11111_00000_00000) >> 10) * 8);
-            b = (byte)Math.Min(b + Math.Floor(b / 31f), byte.MaxValue);
+            byte r = (byte)(((packedColour & 0b0_00000_00000_11111) / 31f) * byte.MaxValue);
+            byte g = (byte)((((packedColour & 0b0_00000_11111_00000) >> 5) / 31f) * byte.MaxValue);
+            byte b = (byte)((((packedColour & 0b0_11111_00000_00000) >> 10) / 31f) * byte.MaxValue);
 
             // Save the colour.
             paletteData[colourIndex * 3] = r;
