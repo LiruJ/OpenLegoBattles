@@ -190,7 +190,7 @@ namespace OpenLegoBattles.GameStates
                 spriteBatch.Draw(logo, logoPosition, new Color(Color.White, fadeAlpha));
                 
                 // Draw the logo text.
-                string logoText = "Lovebirb.com";
+                string logoText = "Lovebirb";
                 Vector2 textSize = unpackerFont.MeasureString(logoText);
                 Vector2 textPosition = new Vector2(window.ClientBounds.Width / 2, window.ClientBounds.Height - (textSize.Y * 2)) - (textSize / 2.0f);
                 spriteBatch.DrawString(unpackerFont, logoText, textPosition, new Color(255, 109, 0, (int)(fadeAlpha * byte.MaxValue)));
