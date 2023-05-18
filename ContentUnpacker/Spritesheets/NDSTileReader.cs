@@ -5,7 +5,7 @@ namespace ContentUnpacker.Spritesheets
     /// <summary>
     /// Handles loading a spritesheet (NCGR file) and indexing it.
     /// </summary>
-    internal class SpritesheetLoader : IDisposable
+    internal class NDSTileReader : IDisposable
     {
         #region Constants
         /// <summary>
@@ -30,6 +30,9 @@ namespace ContentUnpacker.Spritesheets
         #endregion
 
         #region Fields
+        /// <summary>
+        /// The wrapped binary reader.
+        /// </summary>
         private readonly BinaryReader reader;
         #endregion
 
@@ -55,7 +58,13 @@ namespace ContentUnpacker.Spritesheets
         #endregion
 
         #region Constructors
-        public SpritesheetLoader(BinaryReader reader, ushort tileCount, int startPosition)
+        /// <summary>
+        /// Creates a new reader from the given binary reader and parameters.
+        /// </summary>
+        /// <param name="reader"> The wrapped reader. </param>
+        /// <param name="tileCount"> The total number of tiles in the file. </param>
+        /// <param name="startPosition"> The start position of the data in the file. </param>
+        public NDSTileReader(BinaryReader reader, ushort tileCount, int startPosition)
         {
             this.reader = reader;
             TileCount = tileCount;
@@ -77,7 +86,7 @@ namespace ContentUnpacker.Spritesheets
         /// </summary>
         /// <param name="filePath"> The path of the file to load. </param>
         /// <returns> The loaded spritesheet. </returns>
-        public static SpritesheetLoader Load(string filePath)
+        public static NDSTileReader Load(string filePath)
         {
             // Load the file.
             BinaryReader reader = new(File.OpenRead(Path.ChangeExtension(filePath, ncgrFileExtension)));
@@ -120,6 +129,9 @@ namespace ContentUnpacker.Spritesheets
         #endregion
 
         #region Disposal Functions
+        /// <summary>
+        /// Disposes of the underlying reader.
+        /// </summary>
         public void Dispose() => reader.Dispose();
         #endregion
     }

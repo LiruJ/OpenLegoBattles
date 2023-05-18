@@ -105,10 +105,10 @@ namespace ContentUnpacker.Tilemaps.TileRules
         #endregion
 
         #region Sprite Functions
-        public static void AddTreesToSpritesheet(ColourPaletteLoader colourPalette, SpritesheetSaver outputSpritesheet, SpritesheetLoader factionSpritesheet, TilemapBlockPalette blockPalette, string factionTilesetName)
+        public static async Task AddTreesToSpritesheetAsync(NDSColourPalette colourPalette, SpritesheetWriter outputSpritesheet, NDSTileReader factionSpritesheet, TilemapBlockPalette blockPalette, string factionTilesetName)
         {
-            Bitmap treeMask = new(Image.FromFile(Path.Combine("Masks", factionTilesetName + "TreeMask.png")));
-            int maskTileWidth = treeMask.Width / SpritesheetLoader.TileSize;
+            using Image<A8> treeMask = await Image.LoadAsync<A8>(Path.Combine("Masks", factionTilesetName + "TreeMask.png"));
+            int maskTileWidth = treeMask.Width / NDSTileReader.TileSize;
             for (int i = 0; i < treeTilePaletteIndices.Count; i++)
             {
                 // Get the palette block index of the tree, then reverse-index to get the top-left sub-tile index of the mask.
@@ -116,7 +116,7 @@ namespace ContentUnpacker.Tilemaps.TileRules
                 ushort maskIndex = (ushort)((treeBlockOriginalIndex * 3) + (Math.Floor((treeBlockOriginalIndex * 3) / (float)maskTileWidth) * maskTileWidth));
 
                 // Write the block using the mask.
-                outputSpritesheet.WriteBlockFromLoader(factionSpritesheet, colourPalette, blockPalette.Blocks[treeBlockOriginalIndex], treeMask, maskIndex);
+                outputSpritesheet.WriteBlockFromReader(factionSpritesheet, colourPalette, blockPalette.Blocks[treeBlockOriginalIndex], treeMask, maskIndex);
             }
         }
         #endregion

@@ -99,20 +99,21 @@ namespace ContentUnpacker.Tilemaps
         private static async Task createFactionSpritesheetsAsync(CommandLineOptions options, Dictionary<string, FactionTilePalette> factionTilePalettesByName)
         {
             // Create the global tree/fog palette/rules.
-            string tilesetFolderPath = Path.Combine(options.OutputFolder, SpritesheetSaver.DefaultSpriteOutputFolder);
+            string tilesetFolderPath = Path.Combine(options.OutputFolder, SpritesheetWriter.DefaultSpriteOutputFolder);
             TreeConnectionRules.SaveTreeRules(tilesetFolderPath);
             FogConnectionRules.SaveFogRules(tilesetFolderPath);
 
             // Load the fog spritesheet.
-            using SpritesheetLoader fogSpritesheet = SpritesheetLoader.Load(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, "FowTileset"));
+            using NDSTileReader fogSpritesheet = NDSTileReader.Load(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, "FowTileset"));
 
             // Create the spritesheets for each faction.
-            await Task.Run(() =>
-            {
-                // Save the tile palettes, which saves the sprites.
-                foreach (FactionTilePalette factionTilePalette in factionTilePalettesByName.Values)
-                    factionTilePalette.FinaliseAndSave(options, fogSpritesheet);
-            });
+            await Task.WhenAll(factionTilePalettesByName.Values.Select(async x => await x.FinaliseAndSaveAsync(options, fogSpritesheet)));
+            //await Task.Run(() =>
+            //{
+            //    // Save the tile palettes, which saves the sprites.
+            //    foreach (FactionTilePalette factionTilePalette in factionTilePalettesByName.Values)
+            //        factionTilePalette.FinaliseAndSaveAsync(options, fogSpritesheet);
+            //});
         }
 
         private static async Task saveTilemapsAsync(CommandLineOptions options, Dictionary<string, TilemapLoader> tilemapDataByName, Dictionary<string, FactionTilePalette> factionTilePalettesByName, Dictionary<string, TilemapBlockPalette> mapPalettesByName)

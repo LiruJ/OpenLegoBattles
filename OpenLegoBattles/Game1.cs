@@ -83,7 +83,7 @@ namespace OpenLegoBattles
 #endif
 
             // Start with the intro screen which also checks for the rom content. If the intro should be skipped, just go straight to the main menu.
-            if (options.SkipIntro)
+            if (options.SkipIntro && RomUnpacker.FindIfHasUnpacked(romContentManager.BaseGameDirectory))
             {
                 Services.AddService(TileGraphicsManager.Load(romContentManager, GraphicsDevice));
                 gameStateManager.CreateAndAddGameState<RuleTestState>();

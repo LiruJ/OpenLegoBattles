@@ -133,11 +133,11 @@ namespace ContentUnpacker.Tilemaps.TileRules
         #endregion
 
         #region Sprite Functions
-        public static void AddFogToSpritesheet(ColourPaletteLoader colourPalette, SpritesheetSaver outputSpritesheet, SpritesheetLoader fogSpritesheet)
+        public static void AddFogToSpritesheet(NDSColourPalette colourPalette, SpritesheetWriter outputSpritesheet, NDSTileReader fogSpritesheet)
         {
             // Go over each original index in the mapper. This will naturally ignore any duplicates and put the tiles into the spritesheet in the correct order.
             foreach (ushort originalSubIndex in fogMapper)
-                outputSpritesheet.WriteTileFromLoader(fogSpritesheet, colourPalette, originalSubIndex);
+                outputSpritesheet.WriteTileFromReader(fogSpritesheet, colourPalette, originalSubIndex);
         }
         #endregion
     }

@@ -1,8 +1,7 @@
 ﻿using ContentUnpacker.Decompressors;
 using ContentUnpacker.Spritesheets;
-using System.Drawing;
-using GlobalShared.Tilemaps;
 using ContentUnpacker.Tilemaps.TileRules;
+using GlobalShared.Tilemaps;
 
 namespace ContentUnpacker.Tilemaps
 {
@@ -67,20 +66,20 @@ namespace ContentUnpacker.Tilemaps
         #endregion
 
         #region Save Functions
-        public void FinaliseAndSave(CommandLineOptions options, SpritesheetLoader fogSpritesheet)
+        public async Task FinaliseAndSaveAsync(CommandLineOptions options, NDSTileReader fogSpritesheet)
         {
             // The different files are all under the same path but with different extensions. Use one path and let the loaders deal with the extensions.
             string factionFilePath = Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, FactionTilesetName);
 
             // Load the colour palette and create the output spritesheet.
-            ColourPaletteLoader colourPalette = ColourPaletteLoader.Load(factionFilePath);
-            using SpritesheetSaver outputSpritesheet = SpritesheetSaver.CreateCustomSpritesheet(32, 8);
+            NDSColourPalette colourPalette = NDSColourPalette.Load(factionFilePath);
+            using SpritesheetWriter outputSpritesheet = new(32, NDSTileReader.TileSize);
 
             // Load the spritesheet for the faction.
-            using SpritesheetLoader factionSpritesheet = SpritesheetLoader.Load(factionFilePath);
+            using NDSTileReader factionSpritesheet = NDSTileReader.Load(factionFilePath);
 
             // Add the trees and fog first.
-            TreeConnectionRules.AddTreesToSpritesheet(colourPalette, outputSpritesheet, factionSpritesheet, FactionPalette, FactionTilesetName);
+            await TreeConnectionRules.AddTreesToSpritesheetAsync(colourPalette, outputSpritesheet, factionSpritesheet, FactionPalette, FactionTilesetName);
             FogConnectionRules.AddFogToSpritesheet(colourPalette, outputSpritesheet, fogSpritesheet);
 
             // Set the terrain sub-tile index to the current index of the saver, as that is where the terrain tiles will be placed.
@@ -88,10 +87,11 @@ namespace ContentUnpacker.Tilemaps
 
             // Add the terrain tiles.
             foreach (ushort originalSubTileIndex in UsedTerrainSubTilesMapper)
-                outputSpritesheet.WriteTileFromLoader(factionSpritesheet, colourPalette, originalSubTileIndex);
+                outputSpritesheet.WriteTileFromReader(factionSpritesheet, colourPalette, originalSubTileIndex);
 
             // Save the output spritesheet.
-            outputSpritesheet.Save(options.OutputFolder, FactionTilesetName);
+            await outputSpritesheet.SaveAsync(options.OutputFolder, FactionTilesetName);
+            outputSpritesheet.Dispose();
         }
         #endregion
 
@@ -109,7 +109,7 @@ namespace ContentUnpacker.Tilemaps
         #region Sub Tile Functions
         /// <summary>
         /// Calculates and returns the sub-tile index of the given index coming straight from the palette file.
-        /// This is based on the sub-tile index after trees and fog have been added, and is only valid after <see cref="FinaliseAndSave(SpritesheetLoader, TilemapBlockPalette)"/> is called.
+        /// This is based on the sub-tile index after trees and fog have been added, and is only valid after <see cref="FinaliseAndSave(NDSTileReader, TilemapBlockPalette)"/> is called.
         /// </summary>
         /// <param name="originalIndex"> The original sub-tile index coming straight from the palette file. </param>
         /// <returns></returns>
