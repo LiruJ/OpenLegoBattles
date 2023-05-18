@@ -1,12 +1,6 @@
 ﻿using ContentUnpacker.Spritesheets;
 using GlobalShared.Tilemaps;
 using LiruGameHelper.XML;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace ContentUnpacker.Tilemaps.TileRules
@@ -38,7 +32,7 @@ namespace ContentUnpacker.Tilemaps.TileRules
         static FogConnectionRules()
         {
             // Load the original block palette and create the mapper between original and new fog indices.
-            originalPalette = TilemapBlockPalette.LoadFromFile(Path.Combine("Masks", "FogTilePalette"), null, false);
+            originalPalette = TilemapBlockPalette.LoadFromFile(Path.Combine("Masks", "FogTilePalette"), false);
             fogMapper = new();
             foreach (TilemapPaletteBlock block in originalPalette)
                 fogMapper.AddCollection(block);

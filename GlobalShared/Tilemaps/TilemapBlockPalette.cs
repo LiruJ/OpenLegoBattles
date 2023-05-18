@@ -8,6 +8,16 @@ namespace GlobalShared.Tilemaps
     {
         #region Constants
         private const string fileExtension = "tbp";
+
+        /// <summary>
+        /// The count of "usable" tiles in a faction palette.
+        /// </summary>
+        public const ushort FactionPaletteCount = 440;
+
+        /// <summary>
+        /// The magic number used by faction palettes.
+        /// </summary>
+        private const byte factionMagicNumber = 0x14;
         #endregion
 
         #region Operators
@@ -58,7 +68,7 @@ namespace GlobalShared.Tilemaps
         #endregion
 
         #region Load Functions
-        public static bool TryLoadFromFile(string filePath, out TilemapBlockPalette? palette, ushort? count = null, bool is16Bit = true, string? extension = fileExtension)
+        public static bool TryLoadFromFile(string filePath, out TilemapBlockPalette? palette, bool is16Bit = true, string? extension = fileExtension)
         {
             // If the file does not exist, return false with no palette.
             if (!File.Exists(Path.ChangeExtension(filePath, extension)))
@@ -68,27 +78,33 @@ namespace GlobalShared.Tilemaps
             }
             else
             {
-                palette = LoadFromFile(filePath, count, is16Bit);
+                palette = LoadFromFile(filePath, is16Bit);
                 return true;
             }
         }
 
-        public static TilemapBlockPalette LoadFromFile(string filePath, ushort? count = null, bool is16Bit = true, string? extension = fileExtension)
+        public static TilemapBlockPalette LoadFromFile(string filePath, bool is16Bit = true, string? extension = fileExtension)
         {
             // Create the reader and read the file.
             using BinaryReader reader = new(File.OpenRead(Path.ChangeExtension(filePath, extension)));
-            return LoadFromFile(reader, count, is16Bit);
+            return LoadFromFile(reader, is16Bit);
         }
 
-        public static TilemapBlockPalette LoadFromFile(BinaryReader reader, ushort? count = null, bool is16Bit = true)
+        public static TilemapBlockPalette LoadFromFile(BinaryReader reader, bool is16Bit = true)
         {
-            // Read the count if none was given, otherwise skip it.
-            if (count == null) count = reader.ReadUInt16();
-            else reader.BaseStream.Position += 2;
+            // If the first byte is the magic number, use the preset count for faction palettes. Otherwise; move the position back by one byte and read the count.
+            byte paletteType = reader.ReadByte();
+            ushort count;
+            if (paletteType == factionMagicNumber) count = FactionPaletteCount;
+            else
+            {
+                reader.BaseStream.Position--;
+                count = reader.ReadUInt16();
+            }
 
             // Create the palette and load from the file into it.
             TilemapBlockPalette palette = new();
-            palette.loadBlocks(reader, count.Value, is16Bit);
+            palette.loadBlocks(reader, count, is16Bit);
             return palette;
         }
 

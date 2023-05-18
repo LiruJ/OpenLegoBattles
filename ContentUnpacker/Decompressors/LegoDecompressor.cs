@@ -1,6 +1,6 @@
 ﻿using ContentUnpacker.NDSFS;
 using GlobalShared.Content;
-using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace ContentUnpacker.Decompressors
 {
@@ -9,12 +9,12 @@ namespace ContentUnpacker.Decompressors
     /// </summary>
     internal static class LegoDecompressor
     {
-        #region Constants
-        /// <summary>
-        /// The name of the tool used to decode.
-        /// </summary>
-        private const string decoderToolName = "lzx.exe";
+        #region External Functions
+        [DllImport("NDSDecompressors.dll", EntryPoint = "LZX_Decode", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+        private static extern void DecodeLZXFile(string filename);
+        #endregion
 
+        #region Constants
         /// <summary>
         /// The magic number of an uncompressed chunk.
         /// </summary>
@@ -40,7 +40,7 @@ namespace ContentUnpacker.Decompressors
         public static async Task DecompressFileAsync(BinaryReader reader, NDSFile file)
         {
             // Ensure the file is valid.
-            if (file.Path == null)
+            if (string.IsNullOrWhiteSpace(file.Path))
                 throw new ArgumentException("File's path was somehow null.");
 
             // Create the output path so that it mirrors the NDS structure.
@@ -52,32 +52,41 @@ namespace ContentUnpacker.Decompressors
             uint magicWord = reader.ReadUInt32();
             reader.BaseStream.Position -= 4;
 
-            // If the file is compressed, decompress it.
-            if (magicWord == MagicWord)
+            // If the file has no compression, just copy it over and do nothing more.
+            if (magicWord != MagicWord)
             {
-                // Read the chunk header.
-                readChunkHeader(reader, out uint uncompressedSize, out List<uint> segmentSizes, out byte compressionType);
+                await loadUncompressedAsync(reader, writer, (uint)file.Size);
+                return;
+            }
 
-                // Handle the compression type. Note that for whatever reason, it can be a compressed header with an uncompressed body.
+            // Read the compressed chunk header.
+            readChunkHeader(reader, out uint uncompressedSize, out List<uint> segmentSizes);
+
+            // Go over each segment.
+            foreach (uint segmentSize in segmentSizes)
+            {
+                // Get the chunk processor for the type of chunk.
+                byte compressionType = reader.ReadByte();
+
+                // Handle the compression type.
                 switch (compressionType)
                 {
                     case lzxMagicByte:
-                        await loadLZXAsync(reader, writer, segmentSizes, file);
+                        reader.BaseStream.Position--;
+                        await loadLZXAsync(reader, writer, segmentSize, file);
                         break;
                     case uncompressedMagicByte:
-                        await loadUncompressedAsync(reader, writer, uncompressedSize);
+                        await loadUncompressedAsync(reader, writer, segmentSize - 1);
                         break;
                     default:
-                        Console.WriteLine($"Unhandled compression type: {compressionType}.");
-                        break;
+                        await Console.Out.WriteLineAsync($"Unhandled compression type: {compressionType} in file {file.Path}. Skipping");
+                        writer.Close();
+                        return;
                 }
             }
-            // Otherwise; just copy it directly.
-            else
-                await loadUncompressedAsync(reader, writer, (uint)file.Size);
         }
 
-        private static void readChunkHeader(BinaryReader reader, out uint uncompressedSize, out List<uint> segmentSizes, out byte compressionType)
+        private static void readChunkHeader(BinaryReader reader, out uint uncompressedSize, out List<uint> segmentSizes)
         {
             // Skip the magic word.
             reader.BaseStream.Position += 4;
@@ -85,80 +94,44 @@ namespace ContentUnpacker.Decompressors
             // Read the compression data.
             uncompressedSize = reader.ReadUInt32();
             uint compressedSegmentCount = reader.ReadUInt32();
-            uint largestCompressedSize = reader.ReadUInt32();
+            uint largestCompressedSize = (uint)Math.Abs(reader.ReadInt32());
 
             // Read the segment sizes.
             segmentSizes = new((int)compressedSegmentCount);
             for (uint i = 0; i < compressedSegmentCount; i++)
-                segmentSizes.Add(reader.ReadUInt32());
-
-            // Get the chunk processor for the type of chunk.
-            compressionType = reader.ReadByte();
-            reader.BaseStream.Position--;
+                segmentSizes.Add((uint)Math.Abs(reader.ReadInt32()));
         }
 
-        private static async Task loadLZXAsync(BinaryReader reader, BinaryWriter writer, List<uint> segmentSizes, NDSFile file)
+        private static async Task loadLZXAsync(BinaryReader reader, BinaryWriter writer, uint segmentSize, NDSFile file)
         {
-            // Save the filenames and tasks for each segment.
-            List<string> segmentFilenames = new(segmentSizes.Count);
+            // Create the filename and path for the temporary file.
+            string segmentFilename = Path.ChangeExtension(file.Path.Replace('.', '_').Replace('/', '_'), ContentFileUtil.TemporaryExtension);
+            string segmentFilePath = Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, TemporaryFolderPath, segmentFilename);
 
-            // Go over each compressed segment.
-            for (int segmentIndex = 0; segmentIndex < segmentSizes.Count; segmentIndex++)
-            {
-                // Get the size of the segment.
-                uint segmentSize = segmentSizes[segmentIndex];
+            // Read the segment from the file into a new temporary file.
+            using BinaryWriter tempFileWriter = new(File.OpenWrite(segmentFilePath));
+            for (uint byteIndex = 0; byteIndex < segmentSize; byteIndex++)
+                tempFileWriter.Write(reader.ReadByte());
+            tempFileWriter.Close();
+            
+            // Decompress the file.
+            await Task.Run(() => DecodeLZXFile(segmentFilePath));
 
-                // Create the filename so that this thread and segment get a unique filename.
-                string segmentTempFilename = Path.ChangeExtension($"{Path.GetFileName(file.Path).Replace('.', '_')}-{Environment.CurrentManagedThreadId}-{segmentIndex}", ContentFileUtil.TemporaryExtension);
-                string segmentTempFilePath = Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, TemporaryFolderPath, segmentTempFilename);
-                segmentFilenames.Add(segmentTempFilePath);
-
-                // Read the segment from the file into a new temporary file.
-                using BinaryWriter tempFileWriter = new(File.OpenWrite(segmentTempFilePath));
-                for (uint byteIndex = 0; byteIndex < segmentSize; byteIndex++)
-                    tempFileWriter.Write(reader.ReadByte());
-                tempFileWriter.Close();
-
-                // Run the decoder on the file.
-                ProcessStartInfo processStartInfo = new(decoderToolName, $"-d \"{segmentTempFilePath}\"")
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                };
-                Process? process = new();
-                process.StartInfo = processStartInfo;
-                process.Start();
-                if (process == null) throw new Exception("LZX processor exe could not be opened.");
-
-                // Add the done task to the list.
-                await process.WaitForExitAsync();
-            }
-
-            // Go over each temporary file and write to the main file, deleting temporary files as they are done.
-            for (int segmentIndex = 0; segmentIndex < segmentFilenames.Count; segmentIndex++)
-            {
-                string segmentFilename = segmentFilenames[segmentIndex];
-
-                // Get the size of the segment.
-                uint segmentSize = segmentSizes[segmentIndex];
-
-                // Write the bytes to the file.
-                using BinaryReader tempFileReader = new(File.OpenRead(segmentFilename));
-                for (int byteIndex = 0; byteIndex < tempFileReader.BaseStream.Length; byteIndex++)
-                    writer.Write(tempFileReader.ReadByte());
-                tempFileReader.Close();
-
-                // Delete the file.
-                File.Delete(segmentFilename);
-            }
+            // Write the bytes to the main file.
+            using BinaryReader tempFileReader = new(File.OpenRead(segmentFilePath));
+            for (int byteIndex = 0; byteIndex < tempFileReader.BaseStream.Length; byteIndex++)
+                writer.Write(tempFileReader.ReadByte());
+            tempFileReader.Close();
+            
+            // Delete the temporary file.
+            File.Delete(segmentFilePath);
         }
 
-        private static async Task loadUncompressedAsync(BinaryReader reader, BinaryWriter writer, uint uncompressedSize)
+        private static async Task loadUncompressedAsync(BinaryReader reader, BinaryWriter writer, uint size)
         {
             await Task.Run(() =>
             {
-                for (int i = 0; i < uncompressedSize; i++)
+                for (int i = 0; i < size; i++)
                     writer.Write(reader.ReadByte());
             });
         }

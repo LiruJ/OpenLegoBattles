@@ -115,12 +115,16 @@ namespace ContentUnpacker.Spritesheets
                     int pixelPositionX = (tileX * 8) + subTileX;
                     int pixelPositionY = (tileY * 8) + subTileY;
 
-                    // If a mask exists, check its value at the position. If it is over 0, skip setting this pixel.
+                    // If a mask exists, check its value at the position.
                     bool pixelIsMasked = hasMask && mask[maskPixelX + subTileX, maskPixelY + subTileY].PackedValue > 0;
+
+                    // Get the colour index from the tiles.
+                    byte colourIndex = source.ReadNextByte();
+
+                    // If the pixel is masked, skip setting it.
                     if (pixelIsMasked) continue;
 
-                    // Get the colour index and associated colour.
-                    byte colourIndex = source.ReadNextByte();
+                    // Set the pixel's colour.
                     Color colour = colourPalette[colourIndex];
                     texture[pixelPositionX, pixelPositionY] = colour;
                 }

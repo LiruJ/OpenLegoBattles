@@ -107,13 +107,8 @@ namespace ContentUnpacker.Tilemaps
             using NDSTileReader fogSpritesheet = NDSTileReader.Load(Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, "FowTileset"));
 
             // Create the spritesheets for each faction.
-            await Task.WhenAll(factionTilePalettesByName.Values.Select(async x => await x.FinaliseAndSaveAsync(options, fogSpritesheet)));
-            //await Task.Run(() =>
-            //{
-            //    // Save the tile palettes, which saves the sprites.
-            //    foreach (FactionTilePalette factionTilePalette in factionTilePalettesByName.Values)
-            //        factionTilePalette.FinaliseAndSaveAsync(options, fogSpritesheet);
-            //});
+            foreach (FactionTilePalette factionTilePalette in factionTilePalettesByName.Values)
+                await factionTilePalette.FinaliseAndSaveAsync(options, fogSpritesheet);
         }
 
         private static async Task saveTilemapsAsync(CommandLineOptions options, Dictionary<string, TilemapLoader> tilemapDataByName, Dictionary<string, FactionTilePalette> factionTilePalettesByName, Dictionary<string, TilemapBlockPalette> mapPalettesByName)

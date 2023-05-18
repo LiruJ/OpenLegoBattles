@@ -1,7 +1,6 @@
 ﻿using ContentUnpacker.Spritesheets;
 using GlobalShared.Tilemaps;
 using LiruGameHelper.XML;
-using System.Drawing;
 using System.Xml;
 
 namespace ContentUnpacker.Tilemaps.TileRules

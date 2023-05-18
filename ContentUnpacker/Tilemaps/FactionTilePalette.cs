@@ -9,11 +9,6 @@ namespace ContentUnpacker.Tilemaps
     {
         #region Constants
         /// <summary>
-        /// The count of "usable" tiles in the faction palette.
-        /// </summary>
-        public const ushort FactionPaletteEndIndex = 440;
-
-        /// <summary>
         /// The map of the fog from the fog tileset to a 0-based tileset.
         /// </summary>
         private static readonly IndexRemapper fogMapper = new();
@@ -21,7 +16,7 @@ namespace ContentUnpacker.Tilemaps
         static FactionTilePalette()
         {
             // Load the fog palette.
-            TilemapBlockPalette fogPalette = TilemapBlockPalette.LoadFromFile(Path.Combine("Masks/FogTilePalette"), null, false);
+            TilemapBlockPalette fogPalette = TilemapBlockPalette.LoadFromFile(Path.Combine("Masks/FogTilePalette"), false);
 
             // Map all the fog tiles.
             foreach (TilemapPaletteBlock fogBlock in fogPalette)
@@ -103,7 +98,7 @@ namespace ContentUnpacker.Tilemaps
         /// <param name="originalIndex"> The original block index. </param>
         /// <returns></returns>
         public TilemapPaletteBlock GetOriginalBlock(TilemapBlockPalette? mapPalette, ushort originalIndex)
-            => (originalIndex >= FactionPaletteEndIndex) ? mapPalette.Blocks[originalIndex - FactionPaletteEndIndex] : FactionPalette.Blocks[originalIndex];
+            => (originalIndex >= TilemapBlockPalette.FactionPaletteCount) ? mapPalette.Blocks[originalIndex - TilemapBlockPalette.FactionPaletteCount] : FactionPalette.Blocks[originalIndex];
         #endregion
 
         #region Sub Tile Functions
@@ -132,7 +127,7 @@ namespace ContentUnpacker.Tilemaps
 
             // Load the faction palette.
             string factionPalettePath = Path.Combine(RomUnpacker.WorkingFolderName, DecompressionStage.OutputFolderPath, "BP", tilePaletteName);
-            TilemapBlockPalette factionPalette = TilemapBlockPalette.LoadFromFile(factionPalettePath, FactionPaletteEndIndex);
+            TilemapBlockPalette factionPalette = TilemapBlockPalette.LoadFromFile(factionPalettePath);
 
             // Create and return the faction tile palette.
             return new FactionTilePalette(factionPalette, factionTilesetName, tilePaletteName);

@@ -2,7 +2,6 @@
 using ContentUnpacker.NDSFS;
 using ContentUnpacker.Tilemaps;
 using System.Collections.Concurrent;
-using System.Xml;
 
 namespace ContentUnpacker
 {
@@ -21,7 +20,7 @@ namespace ContentUnpacker
 
         public const byte SubVersion = 1;
 
-        public const byte PatchVersion = 0;
+        public const byte PatchVersion = 1;
         #endregion
 
         #region XML Constants
@@ -46,25 +45,17 @@ namespace ContentUnpacker
             // Create the file system from the rom.
             NDSFileSystem fileSystem = NDSFileSystem.LoadFromRom(options.InputFile);
             
-            // Load the xml file.
-            XmlDocument contentDescription = new();
-            contentDescription.Load("OffsetOutputs.xml");
-            
             // Load the file's nodes.
-            await loadMainNodeAsync(options, fileSystem, contentDescription);
+            await loadMainNodeAsync(options, fileSystem);
 
             // Write the stopping string.
             Console.WriteLine($"Rom Unpacker has successfully unpacked rom. Enjoy!");
         }
 
-        private static async Task loadMainNodeAsync(CommandLineOptions options, NDSFileSystem fileSystem, XmlDocument contentDescription)
+        private static async Task loadMainNodeAsync(CommandLineOptions options, NDSFileSystem fileSystem)
         {
             // TODO: Implement logging rather than silent errors or exceptions.
 
-            // Ensure the main node exists.
-            XmlNode? mainNode = contentDescription.SelectSingleNode(mainNodeName);
-            if (mainNode == null)
-                throw new Exception($"Content description xml is missing main node named {mainNode}");
 
             // Create a collection to hold pooled binary readers.
             ConcurrentQueue<BinaryReader> pooledBinaryReaders = new();
@@ -76,7 +67,7 @@ namespace ContentUnpacker
             Directory.CreateDirectory(WorkingFolderName);
 
             // Begin each stage in sequence.
-            await DecompressionStage.BeginAsync(options, fileSystem, mainNode);
+            await DecompressionStage.BeginAsync(options, fileSystem);
 #endif
             await TilemapOptimiserStage.BeginAsync(options);
 
